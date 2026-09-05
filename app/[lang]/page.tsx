@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { ArrowRightIcon } from "@/components/Icons";
+import WorkCard from "@/components/WorkCard";
 import { getDict, isValidLocale, type Locale } from "@/lib/i18n";
 import { getPostsByLang } from "@/lib/blog";
+import { getFeaturedProjects } from "@/lib/work";
 
 export default async function HomePage({
   params,
@@ -12,6 +14,7 @@ export default async function HomePage({
   const lang = (isValidLocale(raw) ? raw : "zh") as Locale;
   const dict = getDict(lang);
   const latest = getPostsByLang(lang).slice(0, 3);
+  const featured = getFeaturedProjects().slice(0, 2);
 
   return (
     <div className="flex flex-col">
@@ -58,6 +61,25 @@ export default async function HomePage({
               <h3 className="mt-3 font-medium text-zinc-900 dark:text-zinc-50">{s.title}</h3>
               <p className="mt-2 text-sm leading-relaxed text-zinc-500 dark:text-zinc-400">{s.desc}</p>
             </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="pb-16">
+        <div className="mb-6 flex items-center justify-between">
+          <h2 className="text-lg font-medium text-zinc-900 dark:text-zinc-50">
+            {dict.work.featuredWork}
+          </h2>
+          <Link
+            href={`/${lang}/work`}
+            className="inline-flex items-center gap-1 text-sm text-emerald-600 transition hover:text-emerald-500 dark:text-emerald-400"
+          >
+            {dict.work.viewAllWork} <ArrowRightIcon />
+          </Link>
+        </div>
+        <div className="grid gap-5 sm:grid-cols-2">
+          {featured.map((p) => (
+            <WorkCard key={p.slug} project={p} lang={lang} />
           ))}
         </div>
       </section>
