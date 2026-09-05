@@ -48,7 +48,7 @@ export default async function PricingPlaygroundPage({
         </p>
       </div>
 
-      <PricingPlayground dict={p} />
+      <PricingPlayground dict={p} lang={lang} />
     </div>
   );
 }

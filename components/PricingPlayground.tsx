@@ -21,13 +21,21 @@ const PLAN_FEATURES: Record<PlanId, keyof PricingDict> = {
   team: "teamFeatures",
 };
 
-export default function PricingPlayground({ dict }: { dict: PricingDict }) {
+/** 支付方式品牌点颜色（按语言）：与选座页收银台同一套 */
+const PAY_DOTS: Record<"zh" | "en", [string, string, string]> = {
+  zh: ["bg-blue-500", "bg-sky-500", "bg-indigo-500"],
+  en: ["bg-blue-500", "bg-orange-500", "bg-indigo-500"],
+};
+
+export default function PricingPlayground({ dict, lang }: { dict: PricingDict; lang: "zh" | "en" }) {
   const [cycle, setCycle] = useState<Cycle>("monthly");
   const [plan, setPlan] = useState<PlanId>("free");
   const [target, setTarget] = useState<PlanId>("pro");
   const [phase, setPhase] = useState<Phase>("idle");
   /** 用户点击选中的档位（focus 外框），默认落在当前计划上 */
   const [selected, setSelected] = useState<PlanId>("free");
+  /** 结账浮窗内的支付方式（0/1/2） */
+  const [payMethod, setPayMethod] = useState(0);
 
   const priceOf = (id: PlanId) => PLANS.find((p) => p.id === id)![cycle];
   /** 结账金额：按月 = 月价；按年 = 年价 × 12 */
@@ -36,9 +44,11 @@ export default function PricingPlayground({ dict }: { dict: PricingDict }) {
   const isFreeTarget = target === "free";
   /** 功能对比矩阵中选中列的索引（跟随卡片选择联动，绿框框选整列） */
   const selIdx = PLANS.findIndex((p) => p.id === selected);
+  const lastCol = PLANS.length - 1;
 
   function openCheckout(id: PlanId) {
     setSelected(id);
+    setPayMethod(0);
     if (id === plan) return;
     if (id === "free") {
       // 免费档切换即时生效（模拟直接降级/重置）
@@ -191,23 +201,25 @@ export default function PricingPlayground({ dict }: { dict: PricingDict }) {
         })}
       </div>
 
-      {/* 功能对比矩阵 */}
+      {/* 功能对比矩阵：所有单元格恒定边框占位（透明/绿色切换），列宽稳定不跳动 */}
       <h3 className="mt-10 text-sm font-medium text-zinc-900 dark:text-zinc-50">{dict.matrixTitle}</h3>
       <div className="mt-3 overflow-x-auto rounded-2xl border border-zinc-200 dark:border-zinc-800">
-        <table className="w-full min-w-[480px] text-sm">
+        <table className="w-full min-w-[480px] border-separate border-spacing-0 text-sm">
           <thead>
-            <tr className="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-800/50">
-              <th className="px-4 py-3 text-left font-medium text-zinc-400" />
+            <tr className="bg-zinc-50 dark:bg-zinc-800/50">
+              <th className="border-b border-zinc-200 px-4 py-3 text-left font-medium text-zinc-400 dark:border-zinc-800" />
               {PLANS.map((p, j) => (
                 <th
                   key={p.id}
-                  className={`px-4 py-3 text-center font-medium ${
+                  className={`border-x-2 border-b border-t-2 px-4 py-3 text-center font-medium ${
                     j === selIdx
-                      ? "border-x-2 border-t-2 border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                      : p.id === plan
-                        ? "text-sky-600 dark:text-sky-400"
-                        : "text-zinc-600 dark:text-zinc-300"
-                  }`}
+                      ? `border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 ${
+                          j === 0 ? "rounded-tl-2xl" : ""
+                        } ${j === lastCol ? "rounded-tr-2xl" : ""}`
+                      : "border-transparent border-b-zinc-200 border-t-transparent dark:border-b-zinc-800"
+                  } ${
+                    j !== selIdx && p.id === plan ? "text-sky-600 dark:text-sky-400" : ""
+                  } ${j !== selIdx && p.id !== plan ? "text-zinc-600 dark:text-zinc-300" : ""}`}
                 >
                   {p.name}
                 </th>
@@ -215,28 +227,35 @@ export default function PricingPlayground({ dict }: { dict: PricingDict }) {
             </tr>
           </thead>
           <tbody>
-            {dict.matrix.map((row, i) => (
-              <tr
-                key={row.name}
-                className={i % 2 === 1 ? "bg-zinc-50/60 dark:bg-zinc-800/30" : "bg-white dark:bg-zinc-900"}
-              >
-                <td className="px-4 py-3 text-zinc-600 dark:text-zinc-300">{row.name}</td>
-                {row.vals.map((v, j) => (
-                  <td
-                    key={j}
-                    className={`px-4 py-3 text-center ${
-                      j === selIdx
-                        ? `border-x-2 border-emerald-500 bg-emerald-500/5 ${i === dict.matrix.length - 1 ? "border-b-2" : ""}`
-                        : ""
-                    } ${
-                      v === "✓" ? "text-sky-500" : v === "—" ? "text-zinc-300 dark:text-zinc-600" : "text-zinc-700 dark:text-zinc-200"
-                    }`}
-                  >
-                    {v}
+            {dict.matrix.map((row, i) => {
+              const isLastRow = i === dict.matrix.length - 1;
+              return (
+                <tr
+                  key={row.name}
+                  className={i % 2 === 1 ? "bg-zinc-50/60 dark:bg-zinc-800/30" : "bg-white dark:bg-zinc-900"}
+                >
+                  <td className="border-b border-zinc-100 px-4 py-3 text-zinc-600 last:border-b-0 dark:border-zinc-800 dark:last:border-b-0">
+                    {row.name}
                   </td>
-                ))}
-              </tr>
-            ))}
+                  {row.vals.map((v, j) => (
+                    <td
+                      key={j}
+                      className={`border-x-2 px-4 py-3 text-center ${
+                        j === selIdx
+                          ? `border-emerald-500 bg-emerald-500/5 ${isLastRow ? "border-b-2" : ""} ${
+                              isLastRow && j === 0 ? "rounded-bl-2xl" : ""
+                            } ${isLastRow && j === lastCol ? "rounded-br-2xl" : ""}`
+                          : `border-transparent ${isLastRow ? "border-b-2" : ""}`
+                      } ${
+                        v === "✓" ? "text-sky-500" : v === "—" ? "text-zinc-300 dark:text-zinc-600" : "text-zinc-700 dark:text-zinc-200"
+                      }`}
+                    >
+                      {v}
+                    </td>
+                  ))}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -282,6 +301,28 @@ export default function PricingPlayground({ dict }: { dict: PricingDict }) {
                     <span className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">¥{due}</span>
                   </div>
                 </div>
+
+                {/* 支付方式选取（与选座页收银台同款交互） */}
+                <div className="mt-4">
+                  <div className="text-xs font-medium text-zinc-500 dark:text-zinc-400">{dict.payTitle}</div>
+                  <div className="mt-2 grid grid-cols-3 gap-2">
+                    {[dict.payOptionA, dict.payOptionB, dict.payOptionC].map((label, i) => (
+                      <button
+                        key={label}
+                        onClick={() => setPayMethod(i)}
+                        className={`rounded-xl border px-2 py-2 text-center text-xs transition active:scale-[0.97] ${
+                          payMethod === i
+                            ? "border-sky-500 bg-sky-500/10 text-sky-700 dark:text-sky-400"
+                            : "border-zinc-200 text-zinc-600 hover:border-zinc-300 dark:border-zinc-700 dark:text-zinc-300 dark:hover:border-zinc-600"
+                        }`}
+                      >
+                        <span className={`mx-auto mb-1.5 block h-2.5 w-2.5 rounded-full ${PAY_DOTS[lang][i]}`} aria-hidden />
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 <button
                   onClick={pay}
                   className="mt-5 w-full rounded-xl bg-sky-600 py-3 text-sm font-semibold text-white transition hover:bg-sky-500 active:scale-[0.98]"

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowRightIcon } from "@/components/Icons";
+import BackToCase from "@/components/BackToCase";
 import PreviewFrame from "@/components/PreviewFrame";
 import WorkCard from "@/components/WorkCard";
 import { getDict, isValidLocale, type Locale } from "@/lib/i18n";
@@ -46,12 +47,7 @@ export default async function ProjectDetailPage({
 
   return (
     <div className="py-14">
-      <Link
-        href={`/${lang}/work`}
-        className="text-sm text-zinc-500 transition hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200"
-      >
-        ← {dict.work.detail.backToWork}
-      </Link>
+      <BackToCase href={`/${lang}/work`} label={dict.work.detail.backToWork} />
 
       {/* 标题区 */}
       <div className="mt-6 flex flex-wrap items-center gap-3">

@@ -14,7 +14,7 @@ import {
 } from "@/lib/playground";
 
 type TeatimeDict = Dict["playground"]["teatime"];
-type Phase = "menu" | "ordering" | "success";
+type Phase = "menu" | "pay" | "ordering" | "success";
 
 interface CartLine {
   key: string;
@@ -95,9 +95,16 @@ export default function TeatimePlayground({ dict, lang }: { dict: TeatimeDict; l
     );
   }
 
-  function checkout() {
+  /** 去结算：进入支付确认浮层（微信小程序场景，仅微信支付） */
+  function openPay() {
     if (cart.length === 0) return;
     setShowCart(false);
+    setPhase("pay");
+  }
+
+  /** 确认支付：模拟支付流程后出票 */
+  function confirmPay() {
+    if (cart.length === 0) return;
     setPhase("ordering");
     const total = totalCents;
     const cups = totalCups;
@@ -256,7 +263,7 @@ export default function TeatimePlayground({ dict, lang }: { dict: TeatimeDict; l
                   </div>
                 </div>
                 <button
-                  onClick={checkout}
+                  onClick={openPay}
                   disabled={cartCount === 0}
                   className="shrink-0 rounded-xl bg-amber-500 px-3.5 py-2 text-xs font-medium text-white transition hover:bg-amber-600 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
                 >
@@ -387,12 +394,79 @@ export default function TeatimePlayground({ dict, lang }: { dict: TeatimeDict; l
                     </div>
                   </div>
                   <button
-                    onClick={checkout}
+                    onClick={openPay}
                     disabled={cart.length === 0}
                     className="mt-4 w-full rounded-xl bg-amber-500 py-3 text-sm font-semibold text-white transition hover:bg-amber-600 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     {dict.checkout} · ¥{formatCents(totalCents)}
                   </button>
+                </div>
+              </div>
+            )}
+
+            {/* 支付确认浮层（微信小程序场景：仅微信支付） */}
+            {phase === "pay" && (
+              <div className="absolute inset-0 z-40 flex items-end">
+                <div className="absolute inset-0 bg-zinc-950/50 backdrop-blur-sm" onClick={() => setPhase("menu")} />
+                <div className="animate-pop relative w-full rounded-t-3xl bg-white p-5 shadow-2xl dark:bg-zinc-900">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-base font-semibold text-zinc-900 dark:text-zinc-50">{dict.payTitle}</h3>
+                    <button
+                      onClick={() => setPhase("menu")}
+                      className="flex h-7 w-7 items-center justify-center rounded-full text-zinc-400 transition hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800"
+                      aria-label="close"
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  {/* 订单摘要 */}
+                  <div className="mt-4 rounded-2xl bg-zinc-50 p-3.5 dark:bg-zinc-800/60">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-zinc-500 dark:text-zinc-400">
+                        {totalCups} {dict.cupsUnit}
+                      </span>
+                      <span className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+                        ¥{formatCents(totalCents)}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* 支付方式：微信小程序内仅支持微信支付 */}
+                  <div className="mt-4">
+                    <div className="text-xs font-medium text-zinc-500 dark:text-zinc-400">{dict.payMethodLabel}</div>
+                    <div className="mt-2 flex items-center justify-between rounded-xl border-2 border-amber-500 bg-amber-500/10 px-3.5 py-3">
+                      <span className="flex items-center gap-2.5">
+                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500 text-xs font-bold text-white" aria-hidden>
+                          微
+                        </span>
+                        <span className="text-sm font-medium text-zinc-800 dark:text-zinc-100">{dict.payWechat}</span>
+                      </span>
+                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-500 text-white">
+                        <svg
+                          viewBox="0 0 24 24"
+                          className="h-3 w-3"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth={3.5}
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          aria-hidden
+                        >
+                          <path d="M20 6L9 17l-5-5" />
+                        </svg>
+                      </span>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={confirmPay}
+                    disabled={cart.length === 0}
+                    className="mt-5 w-full rounded-xl bg-amber-500 py-3 text-sm font-semibold text-white transition hover:bg-amber-600 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    {dict.payNow} · ¥{formatCents(totalCents)}
+                  </button>
+                  <p className="mt-3 text-[11px] leading-relaxed text-zinc-400">{dict.payNote}</p>
                 </div>
               </div>
             )}
