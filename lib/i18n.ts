@@ -77,11 +77,11 @@ const zh = {
       },
       {
         name: "定制开发",
-        price: "¥5,000 起",
+        price: "¥3,000 起",
         duration: "按需求评估",
         popular: false,
         desc: "完整 Web 应用与复杂功能模块",
-        items: ["支付、预订等复杂功能", "前后端联调与 API 设计", "性能与 SEO 深度优化", "长期维护可另签协议"],
+        items: ["支付接入、预订等复杂功能", "前后端联调与 API 设计", "性能与 SEO 深度优化", "长期维护可另签协议"],
       },
     ],
     popular: "最受欢迎",
@@ -98,6 +98,7 @@ const zh = {
     faqs: [
       { q: "如何报价？", a: "按功能清单逐项拆解后给出固定报价，清单外不加价；若需求范围变更，仅就变更部分重新评估。" },
       { q: "付款方式？", a: "50% 定金开工，验收通过后付尾款。支持闲鱼担保交易、微信转账等双方都放心的方式。" },
+      { q: "涉及支付的功能能做吗？", a: "可以。支付接入走微信支付、Stripe 等官方平台，资金与卡信息安全由平台承担；微信支付需客户具备企业或个体工商户资质，商户号以客户名义申请。我只负责技术接入，不含安全审计与资金合规服务。" },
       { q: "我能拿到什么？", a: "全部源码、线上部署、域名配置与简要使用文档。源码与知识产权完全归属你。" },
       { q: "可以改几次？", a: "原型确认阶段不限次数修改；开发完成后的小调整免费，较大变更按新增功能计价，先报价后动工。" },
       { q: "上线后出问题怎么办？", a: "交付后 2 周内免费修复 bug；长期维护可按月另签协议，费用透明。" },
@@ -223,11 +224,11 @@ const en: typeof zh = {
       },
       {
         name: "Custom Development",
-        price: "From ¥5,000",
+        price: "From ¥3,000",
         duration: "Scoped per project",
         popular: false,
         desc: "Full web apps and complex feature modules",
-        items: ["Payments, booking and complex flows", "API design & full-stack integration", "Deep performance & SEO tuning", "Long-term maintenance available"],
+        items: ["Payment integration, booking and complex flows", "API design & full-stack integration", "Deep performance & SEO tuning", "Long-term maintenance available"],
       },
     ],
     popular: "Most popular",
@@ -244,6 +245,7 @@ const en: typeof zh = {
     faqs: [
       { q: "How do you price a project?", a: "I break down the feature list item by item and quote a fixed price. No charges beyond the list; scope changes are re-estimated only for the changed parts." },
       { q: "What about payment?", a: "50% deposit to start, the rest after acceptance. Xianyu escrow, WeChat transfer or whatever both sides trust." },
+      { q: "Can you build payment features?", a: "Yes. Payments go through official platforms (WeChat Pay, Stripe), which handle funds and card security. WeChat Pay requires the client to hold a business or sole-proprietor license, with the merchant account registered under the client's name. I handle technical integration only — no security audit or funds compliance services." },
       { q: "What do I receive?", a: "All source code, live deployment, domain setup and brief documentation. Full ownership of code and IP belongs to you." },
       { q: "How many revisions?", a: "Unlimited revisions during the prototype stage; small tweaks after completion are free, bigger changes are quoted as new features before starting." },
       { q: "What if something breaks after launch?", a: "Free bug fixes within 2 weeks of delivery; long-term maintenance available as a separate monthly agreement." },
