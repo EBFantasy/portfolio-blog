@@ -243,8 +243,8 @@ export default function PricingPlayground({ dict, lang }: { dict: PricingDict; l
                       className={`border-x-2 px-4 py-3 text-center ${
                         j === selIdx
                           ? `border-emerald-500 bg-emerald-500/5 ${isLastRow ? "border-b-2" : ""} ${
-                              isLastRow && j === 0 ? "rounded-bl-2xl" : ""
-                            } ${isLastRow && j === lastCol ? "rounded-br-2xl" : ""}`
+                              isLastRow && j === lastCol ? "rounded-br-2xl" : ""
+                            }`
                           : `border-transparent ${isLastRow ? "border-b-2" : ""}`
                       } ${
                         v === "✓" ? "text-sky-500" : v === "—" ? "text-zinc-300 dark:text-zinc-600" : "text-zinc-700 dark:text-zinc-200"

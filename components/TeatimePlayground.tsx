@@ -39,6 +39,8 @@ export default function TeatimePlayground({ dict, lang }: { dict: TeatimeDict; l
   const [phase, setPhase] = useState<Phase>("menu");
   const [order, setOrder] = useState<{ no: string; total: number; cups: number } | null>(null);
   const [progress, setProgress] = useState(0);
+  /** 结账浮层内选中的支付方式索引 */
+  const [payMethod, setPayMethod] = useState(0);
 
   const totalCents = cart.reduce((s, l) => s + teaUnitPriceCents(l.itemId, l.toppingIds) * l.qty, 0);
   const totalCups = cart.reduce((s, l) => s + l.qty, 0);
@@ -99,6 +101,7 @@ export default function TeatimePlayground({ dict, lang }: { dict: TeatimeDict; l
   function openPay() {
     if (cart.length === 0) return;
     setShowCart(false);
+    setPayMethod(0);
     setPhase("pay");
   }
 
@@ -132,6 +135,66 @@ export default function TeatimePlayground({ dict, lang }: { dict: TeatimeDict; l
 
   const specSubtotal = specFor ? teaUnitPriceCents(specFor.id, toppingIds) : 0;
   const queueAhead = progress === 0 ? 2 : progress === 1 ? 1 : 0;
+
+  /** 支付方式选项：微信收银台场景。zh: 微信支付/银行卡；en: WeChat Pay/Visa/Mastercard
+   *  （微信支付境外版支持绑定 Visa 与 Mastercard，小程序内不支持 PayPal） */
+  const payIconWechat = (
+    <span
+      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-xs font-bold text-white"
+      aria-hidden
+    >
+      微
+    </span>
+  );
+  const payIconCard = (
+    <span
+      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-indigo-500 text-white"
+      aria-hidden
+    >
+      <svg
+        viewBox="0 0 24 24"
+        className="h-3.5 w-3.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <rect x="2.5" y="5" width="19" height="14" rx="2.5" />
+        <path d="M2.5 10h19" />
+      </svg>
+    </span>
+  );
+  const payIconVisa = (
+    <span
+      className="flex h-7 w-10 shrink-0 items-center justify-center rounded-md bg-blue-700 text-[9px] font-black italic tracking-tight text-white"
+      aria-hidden
+    >
+      VISA
+    </span>
+  );
+  const payIconMc = (
+    <span
+      className="flex h-7 w-10 shrink-0 items-center justify-center rounded-md bg-zinc-100 dark:bg-zinc-800"
+      aria-hidden
+    >
+      <span className="flex items-center">
+        <span className="h-3.5 w-3.5 rounded-full bg-red-500" />
+        <span className="-ml-1.5 h-3.5 w-3.5 rounded-full bg-amber-400/90" />
+      </span>
+    </span>
+  );
+  const payOptions =
+    lang === "zh"
+      ? [
+          { icon: payIconWechat, label: dict.payWechat },
+          { icon: payIconCard, label: dict.payBank },
+        ]
+      : [
+          { icon: payIconWechat, label: dict.payWechat },
+          { icon: payIconVisa, label: dict.payVisa },
+          { icon: payIconMc, label: dict.payMc },
+        ];
 
   return (
     <div className="mt-10">
@@ -432,30 +495,48 @@ export default function TeatimePlayground({ dict, lang }: { dict: TeatimeDict; l
                     </div>
                   </div>
 
-                  {/* 支付方式：微信小程序内仅支持微信支付 */}
+                  {/* 支付方式：微信支付收银台（可选零钱/银行卡；海外版支持绑定 Visa/Mastercard） */}
                   <div className="mt-4">
                     <div className="text-xs font-medium text-zinc-500 dark:text-zinc-400">{dict.payMethodLabel}</div>
-                    <div className="mt-2 flex items-center justify-between rounded-xl border-2 border-amber-500 bg-amber-500/10 px-3.5 py-3">
-                      <span className="flex items-center gap-2.5">
-                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500 text-xs font-bold text-white" aria-hidden>
-                          微
-                        </span>
-                        <span className="text-sm font-medium text-zinc-800 dark:text-zinc-100">{dict.payWechat}</span>
-                      </span>
-                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-500 text-white">
-                        <svg
-                          viewBox="0 0 24 24"
-                          className="h-3 w-3"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth={3.5}
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          aria-hidden
+                    <div className="mt-2 space-y-2">
+                      {payOptions.map((opt, i) => (
+                        <button
+                          key={opt.label}
+                          onClick={() => setPayMethod(i)}
+                          className={`flex w-full items-center justify-between rounded-xl border-2 px-3.5 py-2.5 text-left transition active:scale-[0.99] ${
+                            payMethod === i
+                              ? "border-amber-500 bg-amber-500/10"
+                              : "border-zinc-200 hover:border-zinc-300 dark:border-zinc-700 dark:hover:border-zinc-600"
+                          }`}
                         >
-                          <path d="M20 6L9 17l-5-5" />
-                        </svg>
-                      </span>
+                          <span className="flex min-w-0 items-center gap-2.5">
+                            {opt.icon}
+                            <span className="text-sm font-medium text-zinc-800 dark:text-zinc-100">{opt.label}</span>
+                          </span>
+                          <span
+                            className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition ${
+                              payMethod === i
+                                ? "border-amber-500 bg-amber-500 text-white"
+                                : "border-zinc-300 dark:border-zinc-600"
+                            }`}
+                          >
+                            {payMethod === i && (
+                              <svg
+                                viewBox="0 0 24 24"
+                                className="h-3 w-3"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth={3.5}
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                aria-hidden
+                              >
+                                <path d="M20 6L9 17l-5-5" />
+                              </svg>
+                            )}
+                          </span>
+                        </button>
+                      ))}
                     </div>
                   </div>
 
