@@ -1,0 +1,40 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+html {
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei",
+    "Noto Sans SC", sans-serif;
+  scroll-behavior: smooth;
+  color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+body {
+  background-color: #fafafa;
+  color: #27272a;
+}
+
+html.dark body {
+  background-color: #09090b;
+  color: #d4d4d8;
+}
+
+::selection {
+  background-color: #a7f3d0;
+  color: #18181b;
+}
+
+html.dark ::selection {
+  background-color: #065f46;
+  color: #ecfdf5;
+}
+
+.prose pre {
+  border-radius: 0.75rem;
+}

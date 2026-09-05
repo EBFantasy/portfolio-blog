@@ -1,0 +1,37 @@
+---
+title: "你好，世界：这个站点是怎么搭起来的"
+date: "2026-09-05"
+lang: "zh"
+summary: "第一篇文章：聊聊本站的技术选型、双语架构与下一步计划，也作为博客系统的验收样例。"
+tags: ["Next.js", "建站"]
+---
+
+你好，欢迎来到 EBFantasy。这是博客系统的第一篇文章——它既是开场白，也是验收样例：如果你能看到这段排版正常的文字、可点击的标签和代码高亮块，说明从 Markdown 到页面的整条内容管道已经跑通了。
+
+## 技术选型
+
+站点基于 **Next.js 15 + TypeScript + Tailwind CSS v4** 构建，部署目标是 Vercel。选这套组合的理由很直接：
+
+- Next.js 的 App Router 用「文件即路由」组织页面，加板块 = 加目录；
+- TypeScript 约束内容元数据和组件接口，写错构建期就报错；
+- Tailwind 让样式即类名，视觉统一且改版快。
+
+## 双语是怎么做的
+
+所有页面挂在 `app/[lang]/` 动态段下，内容分 `zh` / `en` 两套字典与文章目录。访问没有语言前缀的路径时，中间件按浏览器语言自动跳转，URL 形如 `/zh/blog/xxx`、`/en/blog/xxx`。
+
+```ts
+// middleware.ts 的核心逻辑
+const lang = accept.includes("zh") ? "zh" : "en";
+return NextResponse.redirect(new URL(`/${lang}${rest}`, req.url));
+```
+
+## 接下来做什么
+
+按既定分期推进：
+
+1. **第 2 期**：填充网页 Demo、小程序预览与功能演示；
+2. **第 3 期**：上线服务报价页与联系入口；
+3. **第 4 期**：功能 playground 与更多技术文章。
+
+欢迎常来看看。

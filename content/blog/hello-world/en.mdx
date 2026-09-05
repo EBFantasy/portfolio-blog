@@ -1,0 +1,29 @@
+---
+title: "Hello World: How This Site Was Built"
+date: "2026-09-05"
+lang: "en"
+summary: "The first post: tech stack, bilingual architecture and the roadmap, doubling as an acceptance test for the blog pipeline."
+tags: ["Next.js", "Web Dev"]
+---
+
+Welcome to EBFantasy. This first post is both an introduction and an acceptance test: if you can read this well-formatted text, click the tags and see the highlighted code block, the entire Markdown-to-page pipeline is working.
+
+## Tech Stack
+
+The site is built on **Next.js 15 + TypeScript + Tailwind CSS v4**, deployed to Vercel:
+
+- App Router organizes pages as files — adding a section means adding a directory;
+- TypeScript constrains content metadata and component interfaces;
+- Tailwind keeps styling consistent and fast to iterate.
+
+## How Bilingual Routing Works
+
+All pages live under the `app/[lang]/` dynamic segment, with separate `zh` / `en` dictionaries and content directories. A middleware redirects prefix-less visits by browser language, producing URLs like `/zh/blog/xxx` and `/en/blog/xxx`.
+
+## What's Next
+
+1. **Phase 2**: web demos, mini program previews and feature showcases;
+2. **Phase 3**: services & pricing page with contact entry;
+3. **Phase 4**: interactive playground and more technical writing.
+
+Stay tuned.
