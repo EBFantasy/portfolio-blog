@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import PricingPlayground from "@/components/PricingPlayground";
+import BackToCase from "@/components/BackToCase";
 import { getDict, isValidLocale, type Locale } from "@/lib/i18n";
 
 export function generateStaticParams() {
@@ -33,12 +33,7 @@ export default async function PricingPlaygroundPage({
 
   return (
     <div className="py-14">
-      <Link
-        href={`/${lang}/work/saas-pricing`}
-        className="text-sm text-zinc-500 transition hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200"
-      >
-        ← {p.backToCase}
-      </Link>
+      <BackToCase href={`/${lang}/work/saas-pricing`} label={p.backToCase} />
 
       <div className="mt-6">
         <span className="rounded-full bg-sky-500/10 px-2.5 py-1 text-xs text-sky-600 dark:text-sky-400">

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import CinemaPlayground from "@/components/CinemaPlayground";
+import BackToCase from "@/components/BackToCase";
 import { getDict, isValidLocale, type Locale } from "@/lib/i18n";
 
 export function generateStaticParams() {
@@ -33,12 +33,7 @@ export default async function CinemaPlaygroundPage({
 
   return (
     <div className="py-14">
-      <Link
-        href={`/${lang}/work/cinema-booking`}
-        className="text-sm text-zinc-500 transition hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200"
-      >
-        ← {c.backToCase}
-      </Link>
+      <BackToCase href={`/${lang}/work/cinema-booking`} label={c.backToCase} />
 
       <div className="mt-6">
         <span className="rounded-full bg-rose-500/10 px-2.5 py-1 text-xs text-rose-600 dark:text-rose-400">

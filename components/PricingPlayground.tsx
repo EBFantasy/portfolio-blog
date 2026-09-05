@@ -26,6 +26,8 @@ export default function PricingPlayground({ dict }: { dict: PricingDict }) {
   const [plan, setPlan] = useState<PlanId>("free");
   const [target, setTarget] = useState<PlanId>("pro");
   const [phase, setPhase] = useState<Phase>("idle");
+  /** 用户点击选中的档位（focus 外框），默认落在当前计划上 */
+  const [selected, setSelected] = useState<PlanId>("free");
 
   const priceOf = (id: PlanId) => PLANS.find((p) => p.id === id)![cycle];
   /** 结账金额：按月 = 月价；按年 = 年价 × 12 */
@@ -34,6 +36,7 @@ export default function PricingPlayground({ dict }: { dict: PricingDict }) {
   const isFreeTarget = target === "free";
 
   function openCheckout(id: PlanId) {
+    setSelected(id);
     if (id === plan) return;
     if (id === "free") {
       // 免费档切换即时生效（模拟直接降级/重置）
@@ -82,23 +85,52 @@ export default function PricingPlayground({ dict }: { dict: PricingDict }) {
         </div>
       </div>
 
-      {/* 三档卡片 */}
-      <div className="mt-6 grid gap-4 lg:grid-cols-3">
+      {/* 三档卡片：整卡可点，点击出现品牌绿 focus 外框 */}
+      <div role="radiogroup" aria-label={dict.matrixTitle} className="mt-6 grid gap-4 lg:grid-cols-3">
         {PLANS.map((p) => {
           const isCurrent = p.id === plan;
+          const isSelected = selected === p.id;
           const features = dict[PLAN_FEATURES[p.id]] as string[];
           return (
             <div
               key={p.id}
-              className={`relative flex flex-col rounded-3xl border bg-white p-6 transition dark:bg-zinc-900 ${
+              role="radio"
+              aria-checked={isSelected}
+              tabIndex={0}
+              onClick={() => setSelected(p.id)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setSelected(p.id);
+                }
+              }}
+              className={`relative flex cursor-pointer flex-col rounded-3xl border bg-white p-6 outline-offset-2 transition hover:border-zinc-300 focus-visible:outline-2 focus-visible:outline-emerald-500 dark:bg-zinc-900 dark:hover:border-zinc-600 ${
                 p.id === "team"
                   ? "border-sky-500 ring-2 ring-sky-500/30 dark:border-sky-400"
                   : "border-zinc-200 dark:border-zinc-800"
-              } ${isCurrent ? "shadow-lg" : ""}`}
+              } ${isCurrent ? "shadow-lg" : ""} ${
+                isSelected ? "outline-2 outline-emerald-500" : ""
+              }`}
             >
               {p.id === "team" && (
                 <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-sky-500 px-3 py-1 text-[11px] font-medium text-white">
                   {dict.recommend}
+                </span>
+              )}
+              {isSelected && (
+                <span className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-white shadow-md ring-2 ring-white dark:ring-zinc-950">
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="h-3.5 w-3.5"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={3.5}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden
+                  >
+                    <path d="M20 6L9 17l-5-5" />
+                  </svg>
                 </span>
               )}
               <div className="flex items-center justify-between">

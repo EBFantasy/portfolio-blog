@@ -1,3 +1,4 @@
+import ServiceTiers from "@/components/ServiceTiers";
 import { getDict, isValidLocale, type Locale } from "@/lib/i18n";
 
 export default async function ServicesPage({
@@ -30,52 +31,9 @@ export default async function ServicesPage({
         ))}
       </div>
 
-      {/* 服务档位 */}
+      {/* 服务档位（client 组件：点击选中 + 品牌绿 focus 外框） */}
       <h2 className="mt-14 text-lg font-medium text-zinc-900 dark:text-zinc-50">{s.tiersTitle}</h2>
-      <div className="mt-5 grid gap-4 lg:grid-cols-3">
-        {s.tiers.map((tier) => (
-          <div
-            key={tier.name}
-            className={`relative flex flex-col rounded-2xl border bg-white p-6 dark:bg-zinc-900 ${
-              tier.popular
-                ? "border-emerald-500 shadow-lg shadow-emerald-500/5 dark:border-emerald-600"
-                : "border-zinc-200 dark:border-zinc-800"
-            }`}
-          >
-            {tier.popular && (
-              <span className="absolute -top-3 left-5 rounded-full bg-emerald-600 px-3 py-0.5 text-xs font-medium text-white">
-                {s.popular}
-              </span>
-            )}
-            <h3 className="font-medium text-zinc-900 dark:text-zinc-50">{tier.name}</h3>
-            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">{tier.desc}</p>
-            <div className="mt-4 flex items-baseline gap-2">
-              <span className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
-                {tier.price}
-              </span>
-              <span className="text-xs text-zinc-400">{tier.duration}</span>
-            </div>
-            <ul className="mt-5 flex-1 space-y-2.5 border-t border-zinc-100 pt-5 dark:border-zinc-800">
-              {tier.items.map((item) => (
-                <li key={item} className="flex items-start gap-2.5 text-sm text-zinc-600 dark:text-zinc-300">
-                  <svg
-                    className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="m5 13 4 4L19 7" />
-                  </svg>
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
-      </div>
+      <ServiceTiers tiers={s.tiers} popularLabel={s.popular} groupLabel={s.tiersTitle} />
       <p className="mt-3 text-xs text-zinc-400 dark:text-zinc-500">{s.ctaNote}</p>
 
       {/* 交付流程 */}
