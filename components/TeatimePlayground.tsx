@@ -140,7 +140,7 @@ export default function TeatimePlayground({ dict, lang }: { dict: TeatimeDict; l
    *  （微信支付境外版支持绑定 Visa 与 Mastercard，小程序内不支持 PayPal） */
   const payIconWechat = (
     <span
-      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-xs font-bold text-white"
+      className="flex h-7 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-xs font-bold text-white"
       aria-hidden
     >
       微
@@ -148,7 +148,7 @@ export default function TeatimePlayground({ dict, lang }: { dict: TeatimeDict; l
   );
   const payIconCard = (
     <span
-      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-indigo-500 text-white"
+      className="flex h-7 w-10 shrink-0 items-center justify-center rounded-md bg-indigo-500 text-white"
       aria-hidden
     >
       <svg

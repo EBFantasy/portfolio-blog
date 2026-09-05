@@ -70,9 +70,9 @@ export default function ServiceTiers({
             )}
             <h3 className="font-medium text-zinc-900 dark:text-zinc-50">{tier.name}</h3>
             <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">{tier.desc}</p>
-            <div className="mt-4 flex items-baseline gap-2">
+            <div className="mt-4">
               <span className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">{tier.price}</span>
-              <span className="text-xs text-zinc-400">{tier.duration}</span>
+              <span className="mt-1 block text-xs text-zinc-400">{tier.duration}</span>
             </div>
             <ul className="mt-5 flex-1 space-y-2.5 border-t border-zinc-100 pt-5 dark:border-zinc-800">
               {tier.items.map((item) => (

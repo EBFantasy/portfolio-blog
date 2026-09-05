@@ -15,6 +15,7 @@ const zh = {
     home: "首页",
     work: "作品",
     services: "服务",
+    showcase: "模板",
     blog: "博客",
     about: "关于",
     contact: "联系",
@@ -297,6 +298,7 @@ const en: typeof zh = {
     home: "Home",
     work: "Work",
     services: "Services",
+    showcase: "Templates",
     blog: "Blog",
     about: "About",
     contact: "Contact",
@@ -343,7 +345,7 @@ const en: typeof zh = {
     tiers: [
       {
         name: "Lightweight Site",
-        price: "From ¥300",
+        price: "From $42",
         duration: "3-7 days",
         popular: false,
         desc: "Landing pages, corporate sites and marketing pages",
@@ -351,7 +353,7 @@ const en: typeof zh = {
       },
       {
         name: "WeChat Mini Program",
-        price: "From ¥2,000",
+        price: "From $280",
         duration: "2-4 weeks",
         popular: true,
         desc: "Ordering, booking, utility and showcase mini programs",
@@ -359,7 +361,7 @@ const en: typeof zh = {
       },
       {
         name: "Custom Development",
-        price: "From ¥3,000",
+        price: "From $420",
         duration: "Scoped per project",
         popular: false,
         desc: "Full web apps and complex feature modules",
