@@ -34,6 +34,8 @@ export default function PricingPlayground({ dict }: { dict: PricingDict }) {
   const dueOf = (id: PlanId) => (cycle === "monthly" ? priceOf(id) : priceOf(id) * 12);
   const due = dueOf(target);
   const isFreeTarget = target === "free";
+  /** 功能对比矩阵中选中列的索引（跟随卡片选择联动，绿框框选整列） */
+  const selIdx = PLANS.findIndex((p) => p.id === selected);
 
   function openCheckout(id: PlanId) {
     setSelected(id);
@@ -196,11 +198,15 @@ export default function PricingPlayground({ dict }: { dict: PricingDict }) {
           <thead>
             <tr className="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-800/50">
               <th className="px-4 py-3 text-left font-medium text-zinc-400" />
-              {PLANS.map((p) => (
+              {PLANS.map((p, j) => (
                 <th
                   key={p.id}
                   className={`px-4 py-3 text-center font-medium ${
-                    p.id === plan ? "text-sky-600 dark:text-sky-400" : "text-zinc-600 dark:text-zinc-300"
+                    j === selIdx
+                      ? "border-x-2 border-t-2 border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                      : p.id === plan
+                        ? "text-sky-600 dark:text-sky-400"
+                        : "text-zinc-600 dark:text-zinc-300"
                   }`}
                 >
                   {p.name}
@@ -219,6 +225,10 @@ export default function PricingPlayground({ dict }: { dict: PricingDict }) {
                   <td
                     key={j}
                     className={`px-4 py-3 text-center ${
+                      j === selIdx
+                        ? `border-x-2 border-emerald-500 bg-emerald-500/5 ${i === dict.matrix.length - 1 ? "border-b-2" : ""}`
+                        : ""
+                    } ${
                       v === "✓" ? "text-sky-500" : v === "—" ? "text-zinc-300 dark:text-zinc-600" : "text-zinc-700 dark:text-zinc-200"
                     }`}
                   >
