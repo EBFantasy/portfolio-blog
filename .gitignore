@@ -8,3 +8,5 @@ build/
 .vercel/
 .DS_Store
 Thumbs.db
+
+.vercel

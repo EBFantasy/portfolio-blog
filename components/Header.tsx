@@ -14,6 +14,7 @@ export default function Header({ lang, dict }: { lang: Locale; dict: Dict }) {
   const links = [
     { href: `/${lang}`, label: dict.nav.home },
     { href: `/${lang}/work`, label: dict.nav.work },
+    { href: `/${lang}/services`, label: dict.nav.services },
     { href: `/${lang}/blog`, label: dict.nav.blog },
     { href: `/${lang}/about`, label: dict.nav.about },
   ];
