@@ -34,6 +34,7 @@
 
 - [ ] 预览 mockup 入场：浏览器窗口/手机壳从底部浮入 + 轻微透视
 - [ ] mockup 内部元素微动画（座位图呼吸、pricing 卡悬浮）——低优先级
+- [ ] 「在线试玩」按钮出现时的微缩放强调（低优先级）
 - [ ] 「下一个作品」卡片 hover 时箭头位移加强
 - [ ] 正文段落滚动渐显（低优先级，避免过度）
 
@@ -44,6 +45,15 @@
 - [ ] FAQ 展开高度过渡（当前是瞬时，加 grid-template-rows 或 height 动画）
 - [ ] CTA 渐变背景缓慢流动（bg-position 动画）
 - [ ] 微信/邮箱按钮 hover 时图标微动
+
+## 选座 Playground `/[lang]/playground/cinema`
+
+- [ ] 银幕弧线入场：从中间向两侧展开（scaleX 0→1）
+- [ ] 座位图首屏交错入场（按排 stagger 浮入，一次性）
+- [ ] 结算栏从底部滑入（sticky 首次出现时）
+- [ ] 支付成功对勾描边动画（SVG stroke-dashoffset 路径描画，当前是 pop 缩放占位）
+- [ ] 取票码数字滚动翻牌效果（低优先级）
+- [ ] 已选座位 chip 出现时 pop 微弹（低优先级）
 
 ## 博客 `/[lang]/blog` 及详情
 
@@ -60,3 +70,4 @@
 - 首页 hero 按钮组 hover
 - 服务页 FAQ details 展开（+号旋转 45°）
 - WorkCard 卡片 hover 位移 + 阴影
+- 选座 Playground：座位 hover 抬升/选中放大、场次按钮 hover、结算栏按钮按压反馈、收银台弹出 pop 动画（globals.css `@keyframes pop`）、支付方式单选过渡、支付中 spinner

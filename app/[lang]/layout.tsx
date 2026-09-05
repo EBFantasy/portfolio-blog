@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { locales, isValidLocale, getDict, defaultLocale } from "@/lib/i18n";
+import { locales, isValidLocale, getDict } from "@/lib/i18n";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
@@ -28,4 +28,3 @@ export default async function LangLayout({
   );
 }
 
-export { defaultLocale };

@@ -71,6 +71,7 @@ export const projects: Project[] = [
   },
   {
     slug: "cinema-booking",
+    links: { demo: "/playground/cinema" },
     category: "playground",
     preview: "browser",
     accent: "rose",

@@ -73,6 +73,17 @@ export default async function ProjectDetailPage({
         <p className="mt-6 text-center text-xs text-zinc-400 dark:text-zinc-500">
           {dict.work.detail.demoNote}
         </p>
+        {project.links?.demo && (
+          <div className="mt-5 text-center">
+            <Link
+              href={project.links.demo}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-emerald-500 active:scale-[0.98]"
+            >
+              {dict.work.detail.tryIt}
+              <ArrowRightIcon />
+            </Link>
+          </div>
+        )}
       </div>
 
       {/* 正文区 */}
