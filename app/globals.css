@@ -1,6 +1,10 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+@theme {
+  --animate-pop: pop 0.35s ease-out;
+}
+
 @custom-variant dark (&:where(.dark, .dark *));
 
 html {

@@ -17,40 +17,43 @@ import {
 
 type CinemaDict = Dict["playground"]["cinema"];
 type Phase = "picking" | "checkout" | "paying" | "success";
-type PayMethod = "wechat" | "alipay" | "card";
+type PayMethod = "a" | "b" | "c";
 
-const payMethods: { id: PayMethod; dot: string }[] = [
-  { id: "wechat", dot: "bg-emerald-500" },
-  { id: "alipay", dot: "bg-sky-500" },
-  { id: "card", dot: "bg-violet-500" },
-];
+/** 支付方式品牌色点：zh 用国内渠道配色，en 用国际卡组织配色 */
+const payDot: Record<"zh" | "en", Record<PayMethod, string>> = {
+  zh: { a: "bg-emerald-500", b: "bg-sky-500", c: "bg-indigo-500" },
+  en: { a: "bg-blue-600", b: "bg-orange-500", c: "bg-indigo-500" },
+};
 
 export default function CinemaPlayground({ dict, lang }: { dict: CinemaDict; lang: "zh" | "en" }) {
   const [sessionId, setSessionId] = useState(cinemaSessions[0].id);
   const [picked, setPicked] = useState<string[]>([]);
+  /** 每个场次已购买的座位（支付成功后写入，切场次回来仍保留） */
+  const [boughtBySession, setBoughtBySession] = useState<Record<string, string[]>>({});
   const [phase, setPhase] = useState<Phase>("picking");
-  const [payMethod, setPayMethod] = useState<PayMethod>("wechat");
+  const [payMethod, setPayMethod] = useState<PayMethod>("a");
   const [warn, setWarn] = useState(false);
-  const [order, setOrder] = useState<{ id: string; code: string } | null>(null);
+  const [order, setOrder] = useState<{ id: string; code: string; seats: string[] } | null>(null);
 
   const session = cinemaSessions.find((s) => s.id === sessionId) ?? cinemaSessions[0];
+  const bought = boughtBySession[sessionId] ?? [];
   const total = picked.reduce((sum, seat) => sum + seatPriceCents(seat[0]), 0);
-  const picking = phase === "picking";
 
-  const payMethodLabel: Record<PayMethod, string> = {
-    wechat: dict.payWechat,
-    alipay: dict.payAlipay,
-    card: dict.payCard,
+  const payLabels: Record<PayMethod, string> = {
+    a: dict.payOptionA,
+    b: dict.payOptionB,
+    c: dict.payOptionC,
   };
 
   function switchSession(id: string) {
-    if (!picking) return;
+    if (phase !== "picking") return;
     setSessionId(id);
     setPicked([]);
+    setPhase("picking");
   }
 
   function toggleSeat(row: string, col: number) {
-    if (!picking) return;
+    if (phase !== "picking") return;
     const seat = `${row}${col + 1}`;
     if (picked.includes(seat)) {
       setPicked(picked.filter((s) => s !== seat));
@@ -65,9 +68,14 @@ export default function CinemaPlayground({ dict, lang }: { dict: CinemaDict; lan
   function pay() {
     setPhase("paying");
     window.setTimeout(() => {
+      setBoughtBySession((prev) => ({
+        ...prev,
+        [sessionId]: [...(prev[sessionId] ?? []), ...picked],
+      }));
       setOrder({
         id: `EB-${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
         code: String(1000 + Math.floor(Math.random() * 9000)),
+        seats: [...picked],
       });
       setPhase("success");
     }, 1600);
@@ -76,7 +84,7 @@ export default function CinemaPlayground({ dict, lang }: { dict: CinemaDict; lan
   function reset() {
     setPicked([]);
     setOrder(null);
-    setPayMethod("wechat");
+    setPayMethod("a");
     setPhase("picking");
   }
 
@@ -85,7 +93,7 @@ export default function CinemaPlayground({ dict, lang }: { dict: CinemaDict; lan
       {/* 影片条 */}
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
         <div className="flex items-center gap-3">
-          <div className="flex h-12 w-9 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-rose-500 to-pink-600 text-[10px] font-bold text-white">
+          <div className="flex h-12 w-9 items-center justify-center rounded-md bg-gradient-to-br from-rose-500 to-pink-600 text-[10px] font-bold text-white">
             IMAX
           </div>
           <div>
@@ -96,19 +104,19 @@ export default function CinemaPlayground({ dict, lang }: { dict: CinemaDict; lan
         <div className="text-xs text-zinc-400">{dict.vipNote}</div>
       </div>
 
-      {/* 场次选择 */}
+      {/* 场次 */}
       <h3 className="mt-8 text-sm font-medium text-zinc-900 dark:text-zinc-50">{dict.sessionLabel}</h3>
       <div className="mt-3 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
         {cinemaSessions.map((s) => (
           <button
             key={s.id}
             onClick={() => switchSession(s.id)}
-            disabled={!picking}
-            className={`rounded-xl border px-3 py-2.5 text-left transition-all duration-150 ${
+            disabled={phase !== "picking"}
+            className={`rounded-xl border px-3 py-2.5 text-left transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-60 ${
               s.id === sessionId
                 ? "border-rose-500 bg-rose-50 dark:bg-rose-500/10"
-                : "border-zinc-200 enabled:hover:-translate-y-0.5 enabled:hover:border-zinc-300 enabled:hover:shadow-sm dark:border-zinc-700 dark:enabled:hover:border-zinc-600"
-            } disabled:cursor-default`}
+                : "border-zinc-200 hover:-translate-y-0.5 hover:border-zinc-300 dark:border-zinc-700 dark:hover:border-zinc-600"
+            }`}
           >
             <div className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">{s.time}</div>
             <div className="mt-0.5 text-[11px] text-zinc-400">
@@ -120,48 +128,38 @@ export default function CinemaPlayground({ dict, lang }: { dict: CinemaDict; lan
 
       {/* 图例 */}
       <div className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-zinc-500 dark:text-zinc-400">
-        <Legend swatch="border border-zinc-300 bg-white dark:border-zinc-600 dark:bg-zinc-800" label={dict.legendAvailable} />
-        <Legend swatch="border border-rose-400 bg-rose-50 dark:border-rose-400/70 dark:bg-rose-500/10" label={dict.legendVip} />
-        <Legend swatch="bg-gradient-to-br from-rose-500 to-pink-600" label={dict.legendSelected} />
-        <Legend swatch="bg-zinc-300 dark:bg-zinc-700" label={dict.legendSold} />
+        <Legend swatch="border border-rose-500 bg-transparent dark:border-rose-400" label={dict.legendAvailable} />
+        <Legend swatch="bg-rose-500" label={dict.legendVip} />
+        <Legend swatch="bg-rose-500 ring-1 ring-emerald-400" label={dict.legendSelected} check />
+        <Legend swatch="bg-emerald-500" label={dict.legendBought} />
+        <Legend swatch="bg-zinc-300 dark:bg-zinc-600" label={dict.legendSold} />
         <span className="ml-auto">{dict.maxSeatsNote}</span>
       </div>
 
       {/* 银幕 + 座位图 */}
       <div className="mt-6 rounded-3xl border border-zinc-200 bg-white p-5 sm:p-8 dark:border-zinc-800 dark:bg-zinc-900">
-        <div className="mx-auto h-10 w-4/5 rounded-[100%] border-2 border-b-0 border-zinc-300 dark:border-zinc-600" />
-        <p className="mt-1 text-center text-[11px] tracking-[0.35em] text-zinc-400">{dict.screenNote}</p>
-
-        <div className="mt-6 space-y-1.5 overflow-x-auto pb-1">
+        <div className="mx-auto max-w-md">
+          <div className="mx-auto h-10 w-4/5 rounded-[100%] border-2 border-b-0 border-zinc-300 dark:border-zinc-600" />
+          <p className="mt-1 text-center text-[11px] tracking-[0.3em] text-zinc-400">{dict.screenNote}</p>
+        </div>
+        <div className="mt-6 space-y-1.5 overflow-x-auto">
           {SEAT_ROWS.map((row) => (
             <div key={row} className="flex items-center justify-center gap-1.5 sm:gap-2">
-              <span className="w-4 shrink-0 text-center text-[10px] text-zinc-400">{row}</span>
-              {Array.from({ length: SEAT_COLS }, (_, c) => {
-                const sold = isSold(sessionId, row, c);
-                const seat = `${row}${c + 1}`;
-                const selected = picked.includes(seat);
-                const vip = seatTier(row) === "vip";
-                return (
-                  <Fragment key={c}>
-                    {AISLE_AFTER.includes(c) && <span className="w-3 shrink-0 sm:w-5" />}
-                    <button
-                      onClick={() => toggleSeat(row, c)}
-                      disabled={sold || !picking}
-                      title={sold ? undefined : `${seat} ¥${formatCents(seatPriceCents(row))}`}
-                      aria-label={seat}
-                      className={`h-5 w-5 shrink-0 rounded-[5px] transition-all duration-150 sm:h-6 sm:w-6 ${
-                        sold
-                          ? "cursor-not-allowed bg-zinc-300 dark:bg-zinc-700"
-                          : selected
-                            ? "scale-110 bg-gradient-to-br from-rose-500 to-pink-600 shadow-md"
-                            : vip
-                              ? "border border-rose-400/80 bg-rose-50 enabled:hover:-translate-y-0.5 enabled:hover:shadow dark:bg-rose-500/10"
-                              : "border border-zinc-300 bg-white enabled:hover:-translate-y-0.5 enabled:hover:shadow dark:border-zinc-600 dark:bg-zinc-800"
-                      }`}
-                    />
-                  </Fragment>
-                );
-              })}
+              <span className="w-4 shrink-0 text-[10px] text-zinc-400">{row}</span>
+              {Array.from({ length: SEAT_COLS }, (_, c) => (
+                <Fragment key={c}>
+                  {AISLE_AFTER.includes(c) && <span className="w-3 shrink-0 sm:w-5" />}
+                  <SeatButton
+                    row={row}
+                    col={c}
+                    sessionId={sessionId}
+                    picked={picked}
+                    bought={bought}
+                    phase={phase}
+                    onToggle={toggleSeat}
+                  />
+                </Fragment>
+              ))}
             </div>
           ))}
         </div>
@@ -207,14 +205,14 @@ export default function CinemaPlayground({ dict, lang }: { dict: CinemaDict; lan
         </button>
       </div>
 
-      {/* 收银台 / 支付 / 成功 modal */}
-      {phase !== "picking" && (
+      {/* 弹窗：收银台 / 支付中 / 成功 */}
+      {(phase === "checkout" || phase === "paying" || phase === "success") && (
         <div className="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center">
           <div
             className="absolute inset-0 bg-zinc-950/50 backdrop-blur-sm"
             onClick={() => phase === "checkout" && setPhase("picking")}
           />
-          <div className="relative w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl dark:bg-zinc-900 sm:p-7">
+          <div className="animate-pop relative w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl dark:bg-zinc-900 sm:p-7">
             {phase === "checkout" && (
               <>
                 <div className="flex items-center justify-between">
@@ -226,7 +224,6 @@ export default function CinemaPlayground({ dict, lang }: { dict: CinemaDict; lan
                     {dict.cancel}
                   </button>
                 </div>
-
                 <div className="mt-4 rounded-2xl bg-zinc-50 p-4 dark:bg-zinc-800/60">
                   <div className="text-xs font-medium text-zinc-500 dark:text-zinc-400">{dict.orderSummary}</div>
                   <dl className="mt-3 space-y-2 text-sm">
@@ -234,13 +231,13 @@ export default function CinemaPlayground({ dict, lang }: { dict: CinemaDict; lan
                       <dt className="text-zinc-400">{dict.movieLabel}</dt>
                       <dd className="text-zinc-800 dark:text-zinc-100">{dict.movieTitle}</dd>
                     </div>
-                    <div className="flex justify-between gap-4">
-                      <dt className="shrink-0 text-zinc-400">{dict.sessionField}</dt>
-                      <dd className="text-right text-zinc-800 dark:text-zinc-100">
+                    <div className="flex justify-between">
+                      <dt className="text-zinc-400">{dict.sessionField}</dt>
+                      <dd className="text-zinc-800 dark:text-zinc-100">
                         {session.time} · {session.hall[lang]} · {session.audio[lang]}
                       </dd>
                     </div>
-                    <div className="flex justify-between gap-4">
+                    <div className="flex justify-between">
                       <dt className="shrink-0 text-zinc-400">{dict.pickedLabel}</dt>
                       <dd className="flex flex-wrap justify-end gap-1.5">
                         {picked.map((seat) => (
@@ -259,32 +256,28 @@ export default function CinemaPlayground({ dict, lang }: { dict: CinemaDict; lan
                     <span className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">¥{formatCents(total)}</span>
                   </div>
                 </div>
-
                 <div className="mt-4 text-xs font-medium text-zinc-500 dark:text-zinc-400">{dict.payWith}</div>
                 <div className="mt-2 space-y-2">
-                  {payMethods.map((m) => (
+                  {(["a", "b", "c"] as PayMethod[]).map((m) => (
                     <button
-                      key={m.id}
-                      onClick={() => setPayMethod(m.id)}
+                      key={m}
+                      onClick={() => setPayMethod(m)}
                       className={`flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-left text-sm transition ${
-                        payMethod === m.id
+                        payMethod === m
                           ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10"
-                          : "border-zinc-200 enabled:hover:border-zinc-300 dark:border-zinc-700 dark:enabled:hover:border-zinc-600"
+                          : "border-zinc-200 hover:border-zinc-300 dark:border-zinc-700 dark:hover:border-zinc-600"
                       }`}
                     >
-                      <span className={`h-3 w-3 rounded-full ${m.dot}`} />
-                      <span className="text-zinc-800 dark:text-zinc-100">{payMethodLabel[m.id]}</span>
+                      <span className={`h-3 w-3 rounded-full ${payDot[lang][m]}`} />
+                      <span className="text-zinc-800 dark:text-zinc-100">{payLabels[m]}</span>
                       <span
-                        className={`ml-auto h-4 w-4 rounded-full border-2 transition ${
-                          payMethod === m.id
-                            ? "border-emerald-500 bg-emerald-500"
-                            : "border-zinc-300 dark:border-zinc-600"
+                        className={`ml-auto h-4 w-4 rounded-full border-2 ${
+                          payMethod === m ? "border-emerald-500 bg-emerald-500" : "border-zinc-300 dark:border-zinc-600"
                         }`}
                       />
                     </button>
                   ))}
                 </div>
-
                 <button
                   onClick={pay}
                   className="mt-5 w-full rounded-xl bg-emerald-600 py-3 text-sm font-semibold text-white transition hover:bg-emerald-500 active:scale-[0.98]"
@@ -296,7 +289,7 @@ export default function CinemaPlayground({ dict, lang }: { dict: CinemaDict; lan
             )}
 
             {phase === "paying" && (
-              <div className="flex flex-col items-center py-12">
+              <div className="flex flex-col items-center py-10">
                 <span className="h-10 w-10 animate-spin rounded-full border-[3px] border-zinc-200 border-t-emerald-600 dark:border-zinc-700 dark:border-t-emerald-400" />
                 <p className="mt-4 text-sm text-zinc-500 dark:text-zinc-400">{dict.paying}</p>
               </div>
@@ -304,18 +297,8 @@ export default function CinemaPlayground({ dict, lang }: { dict: CinemaDict; lan
 
             {phase === "success" && order && (
               <div className="flex flex-col items-center text-center">
-                <span className="flex h-14 w-14 animate-[pop_0.45s_ease-out] items-center justify-center rounded-full bg-emerald-500">
-                  <svg
-                    viewBox="0 0 24 24"
-                    className="h-7 w-7 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth={3}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M20 6L9 17l-5-5" />
-                  </svg>
+                <span className="flex h-14 w-14 animate-pop items-center justify-center rounded-full bg-emerald-500">
+                  <CheckIcon className="h-7 w-7 text-white" />
                 </span>
                 <h3 className="mt-4 text-lg font-semibold text-zinc-900 dark:text-zinc-50">{dict.successTitle}</h3>
                 <p className="mt-1 text-xs text-zinc-400">
@@ -327,7 +310,7 @@ export default function CinemaPlayground({ dict, lang }: { dict: CinemaDict; lan
                     {order.code}
                   </div>
                   <div className="mt-2 text-xs text-zinc-400">
-                    {session.time} · {session.hall[lang]} · {picked.join(" / ")}
+                    {session.time} · {session.hall[lang]} · {order.seats.join(" / ")}
                   </div>
                 </div>
                 <p className="mt-3 text-[11px] text-zinc-400">{dict.ticketNote}</p>
@@ -354,11 +337,82 @@ export default function CinemaPlayground({ dict, lang }: { dict: CinemaDict; lan
   );
 }
 
-function Legend({ swatch, label }: { swatch: string; label: string }) {
+/** 座位按钮：sold 灰实心 / bought 绿实心 / selected 红实心+绿勾 / 可选 VIP 红实心 / 可选普通 红空心 */
+function SeatButton({
+  row,
+  col,
+  sessionId,
+  picked,
+  bought,
+  phase,
+  onToggle,
+}: {
+  row: string;
+  col: number;
+  sessionId: string;
+  picked: string[];
+  bought: string[];
+  phase: Phase;
+  onToggle: (row: string, col: number) => void;
+}) {
+  const seat = `${row}${col + 1}`;
+  const sold = isSold(sessionId, row, col);
+  const selected = picked.includes(seat);
+  const boughtSeat = bought.includes(seat);
+  const vip = seatTier(row) === "vip";
+  const disabled = sold || boughtSeat || phase !== "picking";
+
+  let cls: string;
+  if (sold) {
+    cls = "cursor-not-allowed bg-zinc-300 dark:bg-zinc-600";
+  } else if (boughtSeat) {
+    cls = "cursor-not-allowed bg-emerald-500";
+  } else if (selected) {
+    cls = "bg-rose-500 ring-2 ring-emerald-400";
+  } else if (vip) {
+    cls = "bg-rose-500 transition-all duration-150 hover:-translate-y-0.5 hover:bg-rose-600 hover:shadow-md";
+  } else {
+    cls =
+      "border border-rose-500 bg-transparent transition-all duration-150 hover:-translate-y-0.5 hover:bg-rose-500/20 hover:shadow-md dark:border-rose-400";
+  }
+
+  return (
+    <button
+      onClick={() => !disabled && onToggle(row, col)}
+      disabled={disabled}
+      title={sold || boughtSeat ? undefined : `${seat} ¥${formatCents(seatPriceCents(row))}`}
+      aria-label={sold ? undefined : `${seat} ¥${formatCents(seatPriceCents(row))}${selected ? " ✓" : ""}`}
+      className={`flex h-5 w-5 items-center justify-center rounded-[5px] sm:h-6 sm:w-6 ${cls}`}
+    >
+      {selected && <CheckIcon className="h-3 w-3 text-emerald-300 sm:h-3.5 sm:w-3.5" />}
+    </button>
+  );
+}
+
+function Legend({ swatch, label, check }: { swatch: string; label: string; check?: boolean }) {
   return (
     <span className="flex items-center gap-1.5">
-      <span className={`h-3.5 w-3.5 rounded-[4px] ${swatch}`} />
+      <span className={`flex h-3.5 w-3.5 items-center justify-center rounded-[4px] ${swatch}`}>
+        {check && <CheckIcon className="h-2.5 w-2.5 text-emerald-300" />}
+      </span>
       {label}
     </span>
+  );
+}
+
+function CheckIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={3.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M20 6L9 17l-5-5" />
+    </svg>
   );
 }
