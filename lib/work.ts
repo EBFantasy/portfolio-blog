@@ -38,6 +38,7 @@ export const projects: Project[] = [
   },
   {
     slug: "teatime-ordering",
+    links: { demo: "/playground/teatime" },
     category: "miniprogram",
     preview: "phone",
     accent: "amber",
@@ -104,6 +105,7 @@ export const projects: Project[] = [
   },
   {
     slug: "saas-pricing",
+    links: { demo: "/playground/pricing" },
     category: "playground",
     preview: "browser",
     accent: "sky",

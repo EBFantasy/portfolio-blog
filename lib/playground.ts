@@ -1,4 +1,6 @@
-/** 星幕选座 playground 共享数据与纯函数（服务端/客户端均可导入，无 server-only） */
+/** playground 共享数据与纯函数（服务端/客户端均可导入，无 server-only） */
+
+/* ------------------------- 星幕 · 选座 ------------------------- */
 
 export interface CinemaSession {
   id: string;
@@ -54,4 +56,100 @@ function hashStr(s: string): number {
 export function isSold(sessionId: string, row: string, col: number): boolean {
   const rate = seatTier(row) === "vip" ? 42 : 28;
   return hashStr(`${sessionId}:${row}${col}`) % 100 < rate;
+}
+
+/* ------------------------- 茶时 · 点单 ------------------------- */
+
+export interface TeaItem {
+  id: string;
+  name: { zh: string; en: string };
+  desc: { zh: string; en: string };
+  /** 基础价（分） */
+  baseCents: number;
+  tag: "hot" | "new" | null;
+  /** Tailwind 渐变（缩略块配色） */
+  grad: string;
+}
+
+export const teaMenu: TeaItem[] = [
+  {
+    id: "t1",
+    name: { zh: "招牌珍珠奶茶", en: "Signature Pearl Milk Tea" },
+    desc: { zh: "锡兰红茶底 · 鲜煮珍珠", en: "Ceylon black tea, house-boiled pearls" },
+    baseCents: 1600,
+    tag: "hot",
+    grad: "from-amber-400 to-orange-500",
+  },
+  {
+    id: "t2",
+    name: { zh: "手打柠檬绿茶", en: "Hand-Smashed Lemon Green Tea" },
+    desc: { zh: "香水柠檬 · 现萃绿茶", en: "Fragrant lemon, fresh-brewed green tea" },
+    baseCents: 1300,
+    tag: "hot",
+    grad: "from-lime-400 to-green-500",
+  },
+  {
+    id: "t3",
+    name: { zh: "杨枝甘露", en: "Mango Pomelo Sago" },
+    desc: { zh: "芒果西柚西米露", en: "Mango, pomelo & sago" },
+    baseCents: 1900,
+    tag: null,
+    grad: "from-yellow-400 to-amber-500",
+  },
+  {
+    id: "t4",
+    name: { zh: "芝士葡萄冻冻", en: "Grape Cheese Foam Jelly" },
+    desc: { zh: "多肉葡萄 · 咸香芝士", en: "Grape slush, salted cheese foam" },
+    baseCents: 1800,
+    tag: "new",
+    grad: "from-purple-400 to-fuchsia-500",
+  },
+  {
+    id: "t5",
+    name: { zh: "茉莉初雪轻乳茶", en: "Jasmine Snow Light Milk Tea" },
+    desc: { zh: "茉莉花茶底 · 轻乳茶", en: "Jasmine tea base, light milk tea" },
+    baseCents: 1500,
+    tag: null,
+    grad: "from-teal-300 to-cyan-500",
+  },
+  {
+    id: "t6",
+    name: { zh: "黑糖波波鲜奶", en: "Brown Sugar Boba Milk" },
+    desc: { zh: "现熬黑糖 · 鲜牛乳", en: "Fresh-brewed brown sugar, whole milk" },
+    baseCents: 1700,
+    tag: "new",
+    grad: "from-stone-400 to-amber-600",
+  },
+];
+
+export interface TeaSpecOption {
+  id: string;
+  label: { zh: string; en: string };
+  extraCents: number;
+}
+
+export const tempOptions: TeaSpecOption[] = [
+  { id: "normal", label: { zh: "正常冰", en: "Normal ice" }, extraCents: 0 },
+  { id: "less", label: { zh: "少冰", en: "Less ice" }, extraCents: 0 },
+  { id: "none", label: { zh: "去冰", en: "No ice" }, extraCents: 0 },
+];
+
+export const sweetOptions: TeaSpecOption[] = [
+  { id: "std", label: { zh: "标准糖", en: "Standard" }, extraCents: 0 },
+  { id: "70", label: { zh: "七分糖", en: "70% sugar" }, extraCents: 0 },
+  { id: "30", label: { zh: "三分糖", en: "30% sugar" }, extraCents: 0 },
+  { id: "none", label: { zh: "无糖", en: "No sugar" }, extraCents: 0 },
+];
+
+export const toppingOptions: TeaSpecOption[] = [
+  { id: "pearl", label: { zh: "珍珠", en: "Pearls" }, extraCents: 200 },
+  { id: "coco", label: { zh: "椰果", en: "Coconut jelly" }, extraCents: 200 },
+  { id: "cheese", label: { zh: "芝士奶盖", en: "Cheese foam" }, extraCents: 400 },
+];
+
+/** 一杯饮品的单价（基础价 + 加料） */
+export function teaUnitPriceCents(itemId: string, toppingIds: string[]): number {
+  const item = teaMenu.find((t) => t.id === itemId);
+  if (!item) return 0;
+  return item.baseCents + toppingOptions.filter((t) => toppingIds.includes(t.id)).reduce((s, t) => s + t.extraCents, 0);
 }

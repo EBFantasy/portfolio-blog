@@ -55,6 +55,23 @@
 - [ ] 取票码数字滚动翻牌效果（低优先级）
 - [ ] 已选座位 chip 出现时 pop 微弹（低优先级）
 
+## 点单 Playground `/[lang]/playground/teatime`
+
+- [ ] 菜单卡片首屏交错入场（stagger 浮入，一次性）
+- [ ] 规格浮层弹出时选项 chips 逐组滑入
+- [ ] 加入购物车时：飞入购物车图标动效（低优先级）+ 购物车角标数字 pop
+- [ ] 出餐进度步骤圆点切换时的过渡描画（当前是颜色过渡占位）
+- [ ] 取餐号数字翻牌（低优先级）
+- [ ] 已下单杯数徽章呼吸效果（排队中状态时，低优先级）
+
+## 付费计划 Playground `/[lang]/playground/pricing`
+
+- [ ] 月/年付切换时价格数字滚动（count-up/flip）
+- [ ] 三档卡片首屏交错入场；Team 卡「推荐」徽标弹性出现
+- [ ] 矩阵行 hover 整行高亮过渡（微交互，可当场做——暂记避免遗忘）
+- [ ] 结账浮窗弹出后金额数字 count-up（低优先级）
+- [ ] 订阅激活后「当前计划」徽章写入动画（低优先级）
+
 ## 博客 `/[lang]/blog` 及详情
 
 - [ ] 列表项滚动入场
@@ -71,3 +88,5 @@
 - 服务页 FAQ details 展开（+号旋转 45°）
 - WorkCard 卡片 hover 位移 + 阴影
 - 选座 Playground：座位 hover 抬升/选中放大、场次按钮 hover、结算栏按钮按压反馈、收银台弹出 pop 动画（globals.css `@keyframes pop`）、支付方式单选过渡、支付中 spinner
+- 点单 Playground：菜单卡 hover 抬升、规格浮层/购物车浮层 pop 弹出、数量加减按钮 hover 变色、结算按钮按压反馈、下单 spinner、成功页对勾 pop + 进度圆点颜色过渡
+- 付费计划 Playground：月/年 pill 切换过渡、卡片 hover 阴影、按钮按压反馈、结账浮窗 pop、支付中 spinner、成功对勾 pop
