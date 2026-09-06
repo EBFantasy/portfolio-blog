@@ -39,6 +39,10 @@ export default function ShowcaseIndex({
 
   return (
     <div className="py-14">
+      <style>{`
+        @keyframes si-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+      `}</style>
+
       <h1 className="text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
         {ui.title[T]}
       </h1>
@@ -67,10 +71,12 @@ export default function ShowcaseIndex({
         })}
       </div>
 
-      {/* 卡片网格 */}
+      {/* 卡片网格：切换分类时交错入场 */}
       <div className="mt-8 grid gap-5 md:grid-cols-2">
-        {shown.map((t) => (
-          <TemplateCard key={t.slug} t={t} lang={lang} viewLabel={ui.view[T]} />
+        {shown.map((t, i) => (
+          <div key={`${cat}-${t.slug}`} style={{ animation: `si-in .5s ease ${i * 70}ms both` }}>
+            <TemplateCard t={t} lang={lang} viewLabel={ui.view[T]} />
+          </div>
         ))}
       </div>
 

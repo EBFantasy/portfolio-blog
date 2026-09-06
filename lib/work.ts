@@ -104,6 +104,72 @@ export const projects: Project[] = [
     links: { demo: "/playground/pipeline" },
   },
   {
+    slug: "cinema-booking",
+    category: "playground",
+    preview: "browser",
+    accent: "rose",
+    year: "2026",
+    tags: ["React", "状态管理", "交互设计"],
+    title: {
+      zh: "星幕 · 电影院在线选座",
+      en: "StarScreen · Cinema Seat Booking",
+    },
+    summary: {
+      zh: "电影院选座交互演示：座位图缩放、连座检测、票价分区与订单结算。",
+      en: "A cinema seat-picking demo: zoomable seat map, consecutive-seat detection, price zones and checkout.",
+    },
+    description: [
+      {
+        zh: "这是一个交互功能演示：完整实现了影院选座的核心状态机——可售/已售/已锁/选中四种状态流转，选座时自动检测连座（情侣座推荐），超额选择自动提示。",
+        en: "An interactive feature demo implementing the full cinema-booking state machine: available / sold / locked / selected transitions, automatic consecutive-seat detection (couple-seat suggestions), and over-limit guards.",
+      },
+      {
+        zh: "座位图支持双指缩放与拖拽（移动端友好），票价按区域（VIP/普通/后排）分层计算，底部结算栏实时汇总数量与总价——所有状态都在客户端本地流转，可直接作为功能原型给到业务方评审。",
+        en: "The seat map supports pinch-zoom and drag (mobile friendly), prices are tiered by zone (VIP / standard / rear), and the checkout bar aggregates count and total in real time. All state lives client-side, ready to be reviewed as a functional prototype.",
+      },
+    ],
+    features: [
+      { zh: "四种座位状态机完整流转", en: "Full 4-state seat machine" },
+      { zh: "连座自动检测与推荐", en: "Consecutive-seat auto detection" },
+      { zh: "分区票价实时结算", en: "Real-time zone-based checkout" },
+      { zh: "触屏缩放拖拽，移动端友好", en: "Pinch-zoom & drag, mobile friendly" },
+    ],
+    links: { demo: "/playground/cinema" },
+  },
+  {
+    slug: "saas-pricing",
+    category: "playground",
+    preview: "browser",
+    accent: "sky",
+    year: "2026",
+    tags: ["React", "Stripe", "订阅计费"],
+    title: {
+      zh: "订阅付费计划模块",
+      en: "Subscription Pricing Module",
+    },
+    summary: {
+      zh: "SaaS 定价页演示：月付/年付切换、功能对比矩阵与 Stripe 结账集成。",
+      en: "A SaaS pricing page demo: monthly/yearly toggle, feature matrix and Stripe checkout integration.",
+    },
+    description: [
+      {
+        zh: "演示一个 SaaS 产品的付费计划页：Free / Pro / Team 三档，月付年付一键切换（年付显示折扣角标），功能对比矩阵随滚动吸顶，最贵的 Team 档做了视觉强调引导升级。",
+        en: "A pricing page demo for a SaaS product: Free / Pro / Team tiers, a one-tap monthly/yearly toggle (yearly shows a discount badge), a feature matrix that sticks while scrolling, and visual emphasis on the Team tier to guide upgrades.",
+      },
+      {
+        zh: "结账链路接入 Stripe Checkout（测试模式），点击升级按钮跳转托管支付页，支付回调后写回用户订阅状态——演示站不保存任何真实支付信息，仅展示完整前后端联调流程。",
+        en: "Checkout hooks into Stripe Checkout (test mode): the upgrade button opens the hosted payment page, and the webhook writes the subscription state back. This demo stores no real payment data — it showcases the complete front/back-end integration flow.",
+      },
+    ],
+    features: [
+      { zh: "月/年付切换，年付折扣角标", en: "Monthly/yearly toggle with discount badge" },
+      { zh: "功能对比矩阵滚动吸顶", en: "Sticky scrolling feature matrix" },
+      { zh: "Stripe Checkout 托管支付页", en: "Stripe Checkout hosted page" },
+      { zh: "支付回调写回订阅状态", en: "Webhook-driven subscription state" },
+    ],
+    links: { demo: "/playground/pricing" },
+  },
+  {
     slug: "aurora-commerce",
     category: "web",
     preview: "browser",
@@ -168,6 +234,7 @@ export const projects: Project[] = [
       { zh: "云开发免运维，按量计费", en: "CloudBase: zero ops, pay-as-you-go" },
       { zh: "商家后台改菜单即时生效", en: "Instant menu updates, no app release" },
     ],
+    links: { demo: "/playground/teatime" },
   },
 ];
 
