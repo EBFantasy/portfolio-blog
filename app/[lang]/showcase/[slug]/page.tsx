@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import ShowcaseTemplatePage from "@/components/ShowcaseTemplatePage";
 import ApexConsulting from "@/components/showcase/ApexConsulting";
 import MaisonVerte from "@/components/showcase/MaisonVerte";
+import NexusAI from "@/components/showcase/NexusAI";
+import PulseAnalytics from "@/components/showcase/PulseAnalytics";
 import { isValidLocale, type Locale } from "@/lib/i18n";
 import { getTemplate, showcaseUI, templates } from "@/lib/showcase";
 
@@ -39,12 +41,18 @@ export default async function ShowcaseTemplateDetailPage({
   const backHref = `/${lang}/showcase`;
   const backLabel = showcaseUI.back[lang === "en" ? "en" : "zh"];
 
-  /* 深度定制版：apex-consulting 与 maison-verte 拥有专属组件（图片 + 动画 + 交互） */
+  /* 深度定制版：这些 slug 拥有专属组件（专属动效/交互/配图），其余走通用渲染器 */
   if (slug === "apex-consulting") {
     return <ApexConsulting lang={lang} backHref={backHref} backLabel={backLabel} />;
   }
   if (slug === "maison-verte") {
     return <MaisonVerte lang={lang} backHref={backHref} backLabel={backLabel} />;
+  }
+  if (slug === "nexus-ai") {
+    return <NexusAI lang={lang} backHref={backHref} backLabel={backLabel} />;
+  }
+  if (slug === "pulse-analytics") {
+    return <PulseAnalytics lang={lang} backHref={backHref} backLabel={backLabel} />;
   }
 
   return <ShowcaseTemplatePage template={template} lang={lang} backHref={backHref} backLabel={backLabel} />;
