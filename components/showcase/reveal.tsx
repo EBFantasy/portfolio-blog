@@ -24,19 +24,26 @@ export function useInView<T extends HTMLElement>(threshold = 0.18) {
   return { ref, inView };
 }
 
-/** 滚动揭示容器：淡入 + 上移，支持延迟形成交错动画 */
+/**
+ * 滚动揭示容器，支持延迟形成交错动画。
+ * dir="up"（默认）淡入上移；dir="left"/"right" 从左/右滑入（科技模板用左右入场与商务/餐饮模板区分）。
+ */
 export function Reveal({
   children,
   delay = 0,
+  dir = "up",
   className,
   style,
 }: {
   children: ReactNode;
   delay?: number;
+  dir?: "up" | "left" | "right";
   className?: string;
   style?: CSSProperties;
 }) {
   const { ref, inView } = useInView<HTMLDivElement>();
+  const hidden =
+    dir === "left" ? "translateX(-48px)" : dir === "right" ? "translateX(48px)" : "translateY(26px)";
   return (
     <div
       ref={ref}
@@ -44,7 +51,7 @@ export function Reveal({
       style={{
         ...style,
         opacity: inView ? 1 : 0,
-        transform: inView ? "none" : "translateY(26px)",
+        transform: inView ? "none" : hidden,
         transition: `opacity .75s ease ${delay}ms, transform .75s cubic-bezier(.22,.61,.36,1) ${delay}ms`,
       }}
     >

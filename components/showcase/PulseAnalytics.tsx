@@ -26,11 +26,13 @@ export default function PulseAnalytics({ lang, backHref, backLabel }: { lang: La
     <div className="py-14">
       <BackToCase href={backHref} label={backLabel} />
       <style>{`
-        @keyframes pl-marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+        @keyframes pl-stamp { 0% { opacity: 0; transform: scale(1.45) rotate(-5deg); } 60% { opacity: 1; transform: scale(.96) rotate(1.5deg); } 100% { opacity: 1; transform: none; } }
+        .pl-ghost { transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease, background .2s ease; }
+        .pl-ghost:hover { border-color: rgba(56,189,248,.55) !important; background: rgba(56,189,248,.08) !important; transform: translateY(-1px); box-shadow: 0 6px 18px rgba(56,189,248,.16); }
         @keyframes pl-blink { 0%, 55% { opacity: 1; } 56%, 100% { opacity: 0; } }
         @keyframes pl-fadeup { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
         @keyframes pl-cell { from { opacity: 0; transform: scale(.92); } to { opacity: 1; transform: none; } }
-        @keyframes pl-flow { from { stroke-dashoffset: 28; } to { stroke-dashoffset: 0; } }
+        @keyframes pl-flow { from { stroke-dashoffset: 32; } to { stroke-dashoffset: 0; } }
       `}</style>
       <div
         className="mt-6 overflow-hidden rounded-3xl border border-zinc-200 shadow-xl dark:border-zinc-800"
@@ -52,8 +54,9 @@ export default function PulseAnalytics({ lang, backHref, backLabel }: { lang: La
   );
 }
 
-/* ================= 交互背景：声呐脉冲（点击触发涟漪） ================= */
-function Sonar() {
+/* ================= 交互背景：虚拟用户头像网络（游走轨迹 + 邻近连线 + 点击涟漪） ================= */
+const AVA_COLORS = ["56,189,248", "52,211,153", "167,139,250", "251,191,36", "244,114,182"];
+function AvatarNet() {
   const ref = useRef<HTMLCanvasElement | null>(null);
   useEffect(() => {
     const canvas = ref.current;
@@ -61,24 +64,49 @@ function Sonar() {
     const ctx = canvas?.getContext("2d");
     if (!canvas || !parent || !ctx) return;
     const DPR = Math.min(2, window.devicePixelRatio || 1);
-    let w = 0, h = 0, raf = 0;
-    type P = { x: number; y: number; vx: number; vy: number; t: number };
-    type Ring = { x: number; y: number; r: number; a: number; c: string };
-    let pts: P[] = [];
+    let w = 0, h = 0, raf = 0, frame = 0;
+    const NAMES = ["A", "K", "M", "S", "L", "J", "R", "T", "Y", "Z", "E"];
+    type Ava = {
+      x: number; y: number; tx: number; ty: number; sp: number;
+      r: number; c: string; name: string; pause: number;
+      trail: { x: number; y: number }[]; ping: number; nextPing: number;
+    };
+    type Ring = { x: number; y: number; r: number; a: number };
+    let avas: Ava[] = [];
     let rings: Ring[] = [];
+    const inKeepOut = (x: number, y: number) =>
+      w > 760 && x > w * 0.27 && x < w * 0.73 && y > h * 0.2 && y < h * 0.8;
+    const retarget = (a: Ava) => {
+      for (let tries = 0; tries < 24; tries++) {
+        const tx = (0.05 + 0.9 * Math.random()) * w;
+        const ty = (0.08 + 0.84 * Math.random()) * h;
+        if (!inKeepOut(tx, ty)) { a.tx = tx; a.ty = ty; return; }
+      }
+      a.tx = w * 0.1; a.ty = h * 0.85;
+    };
     const seed = () => {
-      const n = Math.max(24, Math.min(56, Math.floor(w / 22)));
-      pts = Array.from({ length: n }, () => ({
-        x: Math.random() * w,
-        y: Math.random() * h,
-        vx: (Math.random() - 0.5) * 0.22,
-        vy: (Math.random() - 0.5) * 0.22,
-        t: Math.random() * 300,
-      }));
+      const n = w < 640 ? 7 : 11;
+      avas = Array.from({ length: n }, (_, i) => {
+        const a: Ava = {
+          x: (0.08 + 0.84 * Math.random()) * w,
+          y: (0.1 + 0.8 * Math.random()) * h,
+          tx: 0, ty: 0,
+          sp: 0.3 + Math.random() * 0.25,
+          r: 12 + Math.random() * 4,
+          c: AVA_COLORS[i % AVA_COLORS.length],
+          name: NAMES[i % NAMES.length],
+          pause: Math.random() * 90,
+          trail: [],
+          ping: 0,
+          nextPing: 160 + Math.random() * 300,
+        };
+        a.tx = a.x; a.ty = a.y;
+        return a;
+      });
     };
     const resize = () => {
-      const r = parent.getBoundingClientRect();
-      w = r.width; h = r.height;
+      const rect = parent.getBoundingClientRect();
+      w = rect.width; h = rect.height;
       canvas.width = w * DPR; canvas.height = h * DPR;
       ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
       seed();
@@ -86,37 +114,94 @@ function Sonar() {
     resize();
     window.addEventListener("resize", resize);
     const click = (e: MouseEvent) => {
-      const r = canvas.getBoundingClientRect();
-      rings.push({ x: e.clientX - r.left, y: e.clientY - r.top, r: 4, a: 0.75, c: "56,189,248" });
+      const rect = canvas.getBoundingClientRect();
+      const cx = e.clientX - rect.left, cy = e.clientY - rect.top;
+      rings.push({ x: cx, y: cy, r: 4, a: 0.7 });
+      for (const a of avas) {
+        if (Math.hypot(a.x - cx, a.y - cy) < 150) { a.ping = 1; a.nextPing = 300 + Math.random() * 220; }
+      }
     };
     parent.addEventListener("click", click);
     const step = () => {
+      frame += 1;
       ctx.clearRect(0, 0, w, h);
-      // 网格
-      ctx.strokeStyle = "rgba(27,41,66,0.55)";
+      // 底图网格（地图感）
+      ctx.strokeStyle = "rgba(27,41,66,0.5)";
       ctx.lineWidth = 1;
       const g = 56;
       for (let x = (w % g) / 2; x < w; x += g) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke(); }
       for (let y = (h % g) / 2; y < h; y += g) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
-      // 粒子
-      for (const p of pts) {
-        p.x += p.vx; p.y += p.vy;
-        if (p.x < 0 || p.x > w) p.vx *= -1;
-        if (p.y < 0 || p.y > h) p.vy *= -1;
-        p.t += 1;
-        ctx.fillStyle = "rgba(56,189,248,0.7)";
-        ctx.beginPath(); ctx.arc(p.x, p.y, 1.6, 0, Math.PI * 2); ctx.fill();
-        if (p.t % 240 === 0 && rings.length < 14) {
-          rings.push({ x: p.x, y: p.y, r: 3, a: 0.5, c: p.t % 480 === 0 ? "52,211,153" : "56,189,248" });
+      // 移动：朝目标走（模拟用户在页面间游走），到达后停顿再换目标
+      for (const a of avas) {
+        const dx = a.tx - a.x, dy = a.ty - a.y;
+        const d = Math.hypot(dx, dy) || 1;
+        if (d < 6) {
+          if (a.pause > 0) a.pause -= 1;
+          else { retarget(a); a.pause = 50 + Math.random() * 110; }
+        } else {
+          a.x += (dx / d) * a.sp;
+          a.y += (dy / d) * a.sp;
+        }
+        a.trail.push({ x: a.x, y: a.y });
+        if (a.trail.length > 44) a.trail.shift();
+        a.nextPing -= 1;
+        if (a.nextPing <= 0) { a.ping = 1; a.nextPing = 240 + Math.random() * 320; }
+        if (a.ping > 0) a.ping = Math.max(0, a.ping - 0.014);
+      }
+      // 邻近头像互连 + 沿线流动的数据包（互动感）
+      for (let i = 0; i < avas.length; i++) {
+        for (let j = i + 1; j < avas.length; j++) {
+          const a = avas[i], b = avas[j];
+          const d = Math.hypot(a.x - b.x, a.y - b.y);
+          if (d < 150) {
+            ctx.strokeStyle = `rgba(${a.c},${(1 - d / 150) * 0.34})`;
+            ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+            const t = ((frame + i * 53 + j * 29) % 130) / 130;
+            if (t < 0.42) {
+              const k = t / 0.42;
+              const px = a.x + (b.x - a.x) * k;
+              const py = a.y + (b.y - a.y) * k;
+              ctx.fillStyle = `rgba(${b.c},${Math.sin(k * Math.PI) * 0.9})`;
+              ctx.beginPath(); ctx.arc(px, py, 1.8, 0, Math.PI * 2); ctx.fill();
+            }
+          }
         }
       }
-      // 涟漪
+      // 渐隐轨迹 = 用户足迹
+      for (const a of avas) {
+        for (let k = 1; k < a.trail.length; k++) {
+          const p0 = a.trail[k - 1], p1 = a.trail[k];
+          ctx.strokeStyle = `rgba(${a.c},${(k / a.trail.length) * 0.3})`;
+          ctx.lineWidth = 1.4;
+          ctx.beginPath(); ctx.moveTo(p0.x, p0.y); ctx.lineTo(p1.x, p1.y); ctx.stroke();
+        }
+      }
+      // 点击涟漪
       rings = rings.filter((r) => r.a > 0.01);
       for (const r of rings) {
-        r.r += 1.1; r.a *= 0.985;
-        ctx.strokeStyle = `rgba(${r.c},${r.a})`;
+        r.r += 1.15; r.a *= 0.982;
+        ctx.strokeStyle = `rgba(56,189,248,${r.a})`;
         ctx.lineWidth = 1.5;
         ctx.beginPath(); ctx.arc(r.x, r.y, r.r, 0, Math.PI * 2); ctx.stroke();
+      }
+      // 头像本体（虚拟用户）
+      for (const a of avas) {
+        if (a.ping > 0) {
+          ctx.strokeStyle = `rgba(${a.c},${a.ping * 0.55})`;
+          ctx.lineWidth = 1.5;
+          ctx.beginPath(); ctx.arc(a.x, a.y, a.r + (1 - a.ping) * 24, 0, Math.PI * 2); ctx.stroke();
+        }
+        ctx.fillStyle = "rgba(6,11,20,0.85)";
+        ctx.beginPath(); ctx.arc(a.x, a.y, a.r, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = `rgba(${a.c},0.95)`;
+        ctx.lineWidth = 1.6;
+        ctx.beginPath(); ctx.arc(a.x, a.y, a.r, 0, Math.PI * 2); ctx.stroke();
+        ctx.fillStyle = "rgba(226,237,248,0.95)";
+        ctx.font = `600 ${Math.round(a.r * 0.78)}px ui-sans-serif, system-ui, sans-serif`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(a.name, a.x, a.y + 1);
       }
       raf = requestAnimationFrame(step);
     };
@@ -175,7 +260,7 @@ function SiteNav({ lang }: { lang: Lang }) {
 function Hero({ lang }: { lang: Lang }) {
   return (
     <section className="relative overflow-hidden" style={{ background: "radial-gradient(130% 130% at 78% 0%, rgba(14,165,233,0.4) 0%, rgba(12,74,110,0.22) 40%, var(--pl-bg) 78%)" }}>
-      <Sonar />
+      <AvatarNet />
       <div className="relative z-10 px-6 py-16 text-center sm:px-10 lg:py-20">
         <Reveal>
           <span
@@ -194,8 +279,8 @@ function Hero({ lang }: { lang: Lang }) {
           <p className="mx-auto mt-5 max-w-xl text-sm leading-relaxed sm:text-[15px]" style={{ color: "var(--pl-muted)" }}>
             {L(
               {
-                zh: "5 分钟完成接入，漏斗、留存、路径与实验一站搞定。点击下方背景任意位置，感受 Pulse 的脉搏。",
-                en: "Integrate in 5 minutes. Funnels, retention, paths and experiments in one place. Click anywhere below to feel the pulse.",
+                zh: "5 分钟完成接入，漏斗、留存、路径与实验一站搞定。背景里每个头像都是一位虚拟用户——看它们的足迹与连线，或点击任意位置，感受 Pulse 的脉搏。",
+                en: "Integrate in 5 minutes. Funnels, retention, paths and experiments in one place. Every avatar is a virtual user — watch the trails and links, or click anywhere to feel the pulse.",
               },
               lang
             )}
@@ -212,7 +297,7 @@ function Hero({ lang }: { lang: Lang }) {
             </a>
             <a
               href="#pl-code"
-              className="rounded-xl border px-6 py-3 text-sm font-medium transition hover:bg-white/5"
+              className="pl-ghost rounded-xl border px-6 py-3 text-sm font-medium transition"
               style={{ borderColor: "var(--pl-line)", color: "var(--pl-fg)", background: "rgba(13,21,36,0.6)" }}
             >
               {L({ zh: "5 分钟接入", en: "Integrate in 5 min" }, lang)}
@@ -241,7 +326,7 @@ function Metrics({ lang }: { lang: Lang }) {
     <section className="border-t px-6 py-12 sm:px-10" style={{ borderColor: "var(--pl-line)", background: "var(--pl-panel)" }}>
       <div className="grid grid-cols-2 gap-8 text-center lg:grid-cols-4">
         {stats.map((s, i) => (
-          <Reveal key={s.label.en} delay={i * 110}>
+          <Reveal key={s.label.en} delay={i * 110} dir={i % 2 ? "right" : "left"}>
             <div className="text-3xl font-bold sm:text-4xl" style={{ color: "var(--pl-acc)" }}>
               <CountUp to={s.to} decimals={s.decimals ?? 0} prefix={s.prefix} suffix={s.suffix} />
             </div>
@@ -264,7 +349,7 @@ function Dashboard({ lang }: { lang: Lang }) {
   const [tab, setTab] = useState(0);
   return (
     <section id="pl-dash" className="border-t px-6 py-16 sm:px-10" style={{ borderColor: "var(--pl-line)", background: "var(--pl-bg)" }}>
-      <Reveal>
+      <Reveal dir="left">
         <SectionHead
           lang={lang}
           eyebrow={{ zh: "产品演示 · THE PRODUCT", en: "THE PRODUCT" }}
@@ -272,7 +357,7 @@ function Dashboard({ lang }: { lang: Lang }) {
           desc={{ zh: "下面是一个可交互的产品演示：切换标签、点击漏斗的任意一步，看看 Pulse 如何解释流失。", en: "This demo is interactive: switch tabs, click any funnel step to see how Pulse explains drop-offs." }}
         />
       </Reveal>
-      <Reveal delay={160}>
+      <Reveal dir="right" delay={160}>
         <div className="mt-9 overflow-hidden rounded-2xl border shadow-2xl" style={{ borderColor: "var(--pl-line)", background: "var(--pl-panel)" }}>
           {/* 窗口栏 + 侧边 */}
           <div className="flex items-center gap-1.5 border-b px-4 py-2.5" style={{ borderColor: "var(--pl-line)" }}>
@@ -437,32 +522,34 @@ function RetainPanel({ lang }: { lang: Lang }) {
 function PathsPanel({ lang }: { lang: Lang }) {
   const node = (x: number, y: number, name: Bi, count: string, hot: boolean) => (
     <g key={`${x}-${y}`}>
-      <rect x={x} y={y} width="132" height="40" rx="9" fill={hot ? "rgba(56,189,248,0.14)" : "rgba(27,41,66,0.7)"} stroke={hot ? "rgba(56,189,248,0.6)" : "#1B2942"} />
-      <text x={x + 12} y={y + 17} fontSize="10.5" fill="#E2EDF8">{L(name, lang)}</text>
-      <text x={x + 12} y={y + 31} fontSize="9" fill="#7E8CA5" fontFamily="ui-monospace, monospace">{count}</text>
+      <rect x={x} y={y} width="128" height="42" rx="9" fill={hot ? "rgba(56,189,248,0.14)" : "rgba(27,41,66,0.7)"} stroke={hot ? "rgba(56,189,248,0.65)" : "#2A3B5E"} />
+      <text x={x + 12} y={y + 18} fontSize="10.5" fill="#E2EDF8">{L(name, lang)}</text>
+      <text x={x + 12} y={y + 32} fontSize="9" fill="#7E8CA5" fontFamily="ui-monospace, monospace">{count}</text>
     </g>
   );
   const edge = (d: string, c: string, width: number) => (
-    <path d={d} fill="none" stroke={c} strokeWidth={width} strokeLinecap="round" strokeDasharray="8 6" opacity="0.65" style={{ animation: "pl-flow 1.1s linear infinite" }} />
+    <path d={d} fill="none" stroke={`rgba(${c},0.7)`} strokeWidth={width} strokeLinecap="round" strokeDasharray="9 7" style={{ animation: "pl-flow 1.1s linear infinite" }} />
   );
   return (
     <div>
-      <svg viewBox="0 0 720 260" className="block w-full">
-        {edge("M172 130 C 215 130, 220 70, 258 70", "56,189,248", 9)}
-        {edge("M172 130 C 215 130, 220 190, 258 190", "56,189,248", 4)}
-        {edge("M390 70 C 430 70, 436 50, 472 50", "56,189,248", 7)}
-        {edge("M390 70 C 430 70, 436 130, 472 130", "56,189,248", 3)}
-        {edge("M390 190 C 430 190, 436 210, 472 210", "251,113,133", 8)}
-        {edge("M604 50 C 640 50, 644 50, 668 50", "52,211,153", 6)}
-        {edge("M604 210 C 640 210, 644 210, 668 210", "251,113,133", 6)}
-        {node(30, 110, { zh: "开始访问", en: "Session start" }, "248k", true)}
-        {node(258, 50, { zh: "商品详情", en: "Product page" }, "142k", true)}
-        {node(258, 170, { zh: "分类浏览", en: "Browse categories" }, "71k", false)}
-        {node(472, 30, { zh: "加入购物车", en: "Add to cart" }, "63k", true)}
-        {node(472, 110, { zh: "收藏", en: "Wishlist" }, "32k", false)}
-        {node(472, 190, { zh: "直接离开", en: "Exit" }, "118k", false)}
-        {node(668, 30, { zh: "完成支付", en: "Checkout" }, "29k", true)}
-        <text x="668" y="225" fontSize="9" fill="#FB7185">{L({ zh: "支付页流失 54%", en: "54% drop at checkout" }, lang)}</text>
+      <svg viewBox="0 0 780 272" className="block w-full">
+        {/* 连线层：粗细 = 流量，流动虚线 = 用户走向 */}
+        {edge("M142 137 C 186 137, 192 71, 236 71", "56,189,248", 10)}
+        {edge("M142 137 C 186 137, 192 203, 236 203", "56,189,248", 5)}
+        {edge("M364 71 C 408 71, 414 49, 458 49", "56,189,248", 8)}
+        {edge("M364 71 C 408 71, 414 129, 458 129", "56,189,248", 3)}
+        {edge("M364 203 C 408 203, 414 209, 458 209", "251,113,133", 9)}
+        {edge("M586 49 C 606 49, 616 49, 634 49", "52,211,153", 7)}
+        {/* 节点层 */}
+        {node(14, 116, { zh: "开始访问", en: "Session start" }, "248k", true)}
+        {node(236, 50, { zh: "商品详情", en: "Product page" }, "142k", true)}
+        {node(236, 182, { zh: "分类浏览", en: "Browse categories" }, "71k", false)}
+        {node(458, 28, { zh: "加入购物车", en: "Add to cart" }, "63k", true)}
+        {node(458, 108, { zh: "收藏", en: "Wishlist" }, "32k", false)}
+        {node(458, 188, { zh: "直接离开", en: "Exit" }, "118k", false)}
+        {node(634, 28, { zh: "完成支付", en: "Checkout" }, "29k", true)}
+        <path d="M706 70 C 712 76, 708 80, 700 84" fill="none" stroke="rgba(251,113,133,0.7)" strokeWidth="1.5" strokeDasharray="4 4" />
+        <text x="634" y="96" fontSize="9.5" fill="#FB7185">{L({ zh: "支付页流失 54%", en: "54% drop at checkout" }, lang)}</text>
       </svg>
       <p className="mt-3 text-[11px]" style={{ color: "var(--pl-muted)" }}>
         {L(
@@ -535,21 +622,28 @@ function CodeSection({ lang }: { lang: Lang }) {
   const { ref, inView } = useInView<HTMLDivElement>(0.4);
   const [n, setN] = useState(0);
   const total = CODE_LINES.reduce((a, l) => a + l.length + 6, 0);
-  useEffect(() => {
-    if (!inView) return;
-    const id = setInterval(() => {
-      setN((v) => {
-        if (v >= total) { clearInterval(id); return v; }
-        return v + 1;
-      });
+  const ivRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const cntRef = useRef(0);
+  const stop = () => { if (ivRef.current) { clearInterval(ivRef.current); ivRef.current = null; } };
+  const start = () => {
+    stop();
+    setN(0); cntRef.current = 0;
+    ivRef.current = setInterval(() => {
+      cntRef.current += 1;
+      setN(cntRef.current);
+      if (cntRef.current >= total) stop();
     }, 24);
-    return () => clearInterval(id);
-  }, [inView, total]);
+  };
+  useEffect(() => {
+    if (inView) start();
+    return stop;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inView]);
   let remain = n;
   return (
     <section id="pl-code" className="border-t px-6 py-16 sm:px-10" style={{ borderColor: "var(--pl-line)", background: "var(--pl-panel)" }}>
       <div className="grid items-center gap-10 lg:grid-cols-[1fr_1.1fr]">
-        <Reveal>
+        <Reveal dir="left">
           <SectionHead
             align="left"
             lang={lang}
@@ -571,7 +665,7 @@ function CodeSection({ lang }: { lang: Lang }) {
           </ul>
         </Reveal>
         <div ref={ref}>
-          <Reveal delay={150}>
+          <Reveal dir="right" delay={150}>
             <div className="overflow-hidden rounded-2xl border shadow-2xl" style={{ borderColor: "var(--pl-line)", background: "rgba(6,11,20,0.85)" }}>
               <div className="flex items-center gap-1.5 border-b px-4 py-2.5" style={{ borderColor: "var(--pl-line)" }}>
                 <span className="h-2.5 w-2.5 rounded-full" style={{ background: "#22314F" }} />
@@ -580,7 +674,7 @@ function CodeSection({ lang }: { lang: Lang }) {
                 <span className="ml-2 text-[10px]" style={{ color: "var(--pl-muted)", ...MONO }}>quickstart.ts</span>
                 <button
                   type="button"
-                  onClick={() => setN(0)}
+                  onClick={start}
                   className="ml-auto rounded-md border px-2 py-0.5 text-[10px] transition hover:bg-white/5"
                   style={{ borderColor: "var(--pl-line)", color: "var(--pl-muted)" }}
                 >
@@ -647,7 +741,7 @@ function ReplayDemo({ lang }: { lang: Lang }) {
   const wp = waypoints[Math.min(step, waypoints.length - 1)];
   return (
     <section id="pl-replay" className="border-t px-6 py-16 sm:px-10" style={{ borderColor: "var(--pl-line)", background: "var(--pl-bg)" }}>
-      <Reveal>
+      <Reveal dir="left">
         <SectionHead
           lang={lang}
           eyebrow={{ zh: "会话回放 · SESSION REPLAY", en: "SESSION REPLAY" }}
@@ -655,7 +749,7 @@ function ReplayDemo({ lang }: { lang: Lang }) {
           desc={{ zh: "异常行为自动打标：怒点、死点击、往返抖动，回放里直接高亮——隐私字段全程自动脱敏。", en: "Pulse auto-flags rage clicks, dead clicks and thrashing, then highlights them in the replay — PII masked end to end." }}
         />
       </Reveal>
-      <Reveal delay={160}>
+      <Reveal dir="right" delay={160}>
         <div className="mx-auto mt-9 grid max-w-4xl gap-5 lg:grid-cols-[1.2fr_1fr]">
           {/* 模拟页面 + 光标 */}
           <div className="relative overflow-hidden rounded-2xl border" style={{ borderColor: "var(--pl-line)", background: "var(--pl-panel)" }}>
@@ -739,7 +833,7 @@ function Features({ lang }: { lang: Lang }) {
   ];
   return (
     <section id="pl-features" className="border-t px-6 py-16 sm:px-10" style={{ borderColor: "var(--pl-line)", background: "var(--pl-panel)" }}>
-      <Reveal>
+      <Reveal dir="right">
         <SectionHead
           lang={lang}
           eyebrow={{ zh: "产品功能", en: "FEATURES" }}
@@ -748,7 +842,7 @@ function Features({ lang }: { lang: Lang }) {
       </Reveal>
       <div className="mt-9 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((f, i) => (
-          <Reveal key={f.title.en} delay={(i % 3) * 120}>
+          <Reveal key={f.title.en} delay={(i % 3) * 120} dir={i % 2 ? "right" : "left"}>
             <div
               className="h-full rounded-2xl border p-5 transition-all duration-300 hover:-translate-y-1"
               style={{ background: "rgba(6,11,20,0.6)", borderColor: "var(--pl-line)" }}
@@ -766,27 +860,59 @@ function Features({ lang }: { lang: Lang }) {
   );
 }
 
+/* ================= 安全合规：认证徽章墙（盖章式入场，区别于滚动带） ================= */
 function Compliance({ lang }: { lang: Lang }) {
-  const badges = ["GDPR", lang === "zh" ? "个人信息保护法" : "PIPL", "SOC 2 Type II", "ISO 27001", lang === "zh" ? "数据驻留可选" : "Region-pinned storage"];
-  const row = [...badges, ...badges];
+  const { ref, inView } = useInView<HTMLDivElement>(0.3);
+  const items: { name: string; sub: Bi }[] = [
+    { name: "GDPR", sub: { zh: "欧盟通用数据保护条例", en: "EU data protection" } },
+    { name: lang === "zh" ? "个人信息保护法" : "PIPL", sub: { zh: "中国个人信息保护合规", en: "China privacy compliance" } },
+    { name: "SOC 2 Type II", sub: { zh: "年度独立安全审计", en: "Annual independent audit" } },
+    { name: "ISO 27001", sub: { zh: "信息安全管理体系认证", en: "ISMS certified" } },
+    { name: lang === "zh" ? "数据驻留可选" : "Region-pinned", sub: { zh: "数据存储区域自主可选", en: "Choose your data region" } },
+  ];
   return (
-    <section id="pl-sec" className="border-t py-6" style={{ borderColor: "var(--pl-line)", background: "var(--pl-bg)" }}>
-      <div className="flex items-center gap-6 overflow-hidden">
-        <span className="shrink-0 pl-6 text-[11px] font-semibold tracking-widest sm:pl-10" style={{ color: "var(--pl-muted)" }}>
-          {L({ zh: "安全合规", en: "SECURITY" }, lang)}
-        </span>
-        <div className="relative flex-1 overflow-hidden">
-          <div className="flex w-max items-center gap-9" style={{ animation: "pl-marquee 30s linear infinite" }}>
-            {row.map((b, i) => (
-              <span key={i} className="flex items-center gap-2 whitespace-nowrap text-xs font-medium" style={{ color: "var(--pl-muted)" }}>
-                <span style={{ color: "var(--pl-acc2)" }}>🛡</span> {b}
-              </span>
-            ))}
+    <section id="pl-sec" className="border-t px-6 py-14 sm:px-10" style={{ borderColor: "var(--pl-line)", background: "var(--pl-bg)" }}>
+      <div ref={ref} className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <div className="text-[11px] font-bold tracking-[0.22em]" style={{ color: "var(--pl-acc)" }}>
+            {L({ zh: "安全合规", en: "SECURITY & COMPLIANCE" }, lang)}
           </div>
+          <h2 className="mt-2 text-xl font-semibold" style={{ color: "var(--pl-fg)" }}>
+            {L({ zh: "企业级安全，默认开启", en: "Enterprise-grade security, on by default" }, lang)}
+          </h2>
         </div>
+        <a href="#pl-cta" className="text-xs font-semibold transition hover:opacity-70" style={{ color: "var(--pl-acc2)" }}>
+          {L({ zh: "下载最新审计报告 →", en: "Download the latest audit report →" }, lang)}
+        </a>
+      </div>
+      <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        {items.map((it, i) => (
+          <div
+            key={it.name}
+            className="rounded-2xl border p-4 text-center transition-all duration-300 hover:-translate-y-1"
+            style={{
+              borderColor: "var(--pl-line)",
+              background: "rgba(13,21,36,0.7)",
+              opacity: inView ? 1 : 0,
+              animation: inView ? `pl-stamp .55s cubic-bezier(.2,.8,.3,1.2) ${i * 130}ms both` : "none",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.borderColor = "rgba(52,211,153,0.55)")}
+            onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--pl-line)")}
+          >
+            <svg viewBox="0 0 24 24" className="mx-auto h-7 w-7" fill="none" stroke="var(--pl-acc2)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <path d="M12 3l7 3v5c0 4.4-2.9 7.6-7 10-4.1-2.4-7-5.6-7-10V6l7-3z" />
+              <path d="M9.2 12.2l2 2 3.6-4" />
+            </svg>
+            <div className="mt-2.5 text-[13px] font-bold" style={{ color: "var(--pl-fg)" }}>{it.name}</div>
+            <div className="mt-1 text-[10.5px] leading-snug" style={{ color: "var(--pl-muted)" }}>{L(it.sub, lang)}</div>
+            <div className="mt-2.5 inline-block rounded-full px-2 py-0.5 text-[9px] font-bold" style={{ background: "rgba(52,211,153,0.12)", color: "var(--pl-acc2)" }}>
+              {L({ zh: "已认证", en: "VERIFIED" }, lang)}
+            </div>
+          </div>
+        ))}
       </div>
     </section>
-  );
+  )
 }
 
 function Quote({ lang }: { lang: Lang }) {

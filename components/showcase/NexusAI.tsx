@@ -25,7 +25,10 @@ export default function NexusAI({ lang, backHref, backLabel }: { lang: Lang; bac
     <div className="py-14">
       <BackToCase href={backHref} label={backLabel} />
       <style>{`
-        @keyframes nx-marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+        @keyframes nx-chip { from { opacity: 0; transform: translateY(10px) scale(.96); } to { opacity: 1; transform: none; } }
+        @keyframes nx-sync { 0%, 72% { opacity: .35; } 82% { opacity: 1; box-shadow: 0 0 8px rgba(34,211,238,.9); } 92%, 100% { opacity: .35; } }
+        .nx-ghost { transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease, background .2s ease; }
+        .nx-ghost:hover { border-color: rgba(139,92,246,.6) !important; background: rgba(139,92,246,.1) !important; transform: translateY(-1px); box-shadow: 0 6px 18px rgba(139,92,246,.18); }
         @keyframes nx-blink { 0%, 55% { opacity: 1; } 56%, 100% { opacity: 0; } }
         @keyframes nx-fadeup { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
         @keyframes nx-dots { 0%, 20% { opacity: .2; } 50% { opacity: 1; } 80%, 100% { opacity: .2; } }
@@ -225,7 +228,7 @@ function Hero({ lang }: { lang: Lang }) {
                 </a>
                 <a
                   href="#nx-ask"
-                  className="rounded-xl border px-6 py-3 text-sm font-medium transition hover:bg-white/5"
+                  className="nx-ghost rounded-xl border px-6 py-3 text-sm font-medium transition"
                   style={{ borderColor: "var(--nx-line)", color: "var(--nx-fg)", background: "rgba(17,24,39,0.6)" }}
                 >
                   {L({ zh: "试试问数演示", en: "Try the live demo" }, lang)}
@@ -257,16 +260,23 @@ function Terminal({ lang }: { lang: Lang }) {
   const [n, setN] = useState(0);
   const costs = TLINES.map((l) => (l.kind === "cmd" ? l.text.en.length + 4 : 8));
   const total = costs.reduce((a, b) => a + b, 0);
-  useEffect(() => {
-    if (!inView) return;
-    const id = setInterval(() => {
-      setN((v) => {
-        if (v >= total) { clearInterval(id); return v; }
-        return v + 1;
-      });
+  const ivRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const cntRef = useRef(0);
+  const stop = () => { if (ivRef.current) { clearInterval(ivRef.current); ivRef.current = null; } };
+  const start = () => {
+    stop();
+    setN(0); cntRef.current = 0;
+    ivRef.current = setInterval(() => {
+      cntRef.current += 1;
+      setN(cntRef.current);
+      if (cntRef.current >= total) stop();
     }, 26);
-    return () => clearInterval(id);
-  }, [inView, total]);
+  };
+  useEffect(() => {
+    if (inView) start();
+    return stop;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inView]);
   let remain = n;
   const rendered = TLINES.map((l, i) => {
     const cost = costs[i];
@@ -288,7 +298,7 @@ function Terminal({ lang }: { lang: Lang }) {
           <span className="ml-2 text-[10px]" style={{ color: "var(--nx-muted)", ...MONO }}>nexus — zsh</span>
           <button
             type="button"
-            onClick={() => setN(0)}
+            onClick={start}
             className="ml-auto rounded-md border px-2 py-0.5 text-[10px] transition hover:bg-white/5"
             style={{ borderColor: "var(--nx-line)", color: "var(--nx-muted)" }}
           >
@@ -405,10 +415,10 @@ function AskDemo({ lang }: { lang: Lang }) {
   };
   useEffect(() => () => clearAll(), []);
   const a = ASKS[sel];
-  const shownSql = a.sql.slice(0, sqlN);
+  const shownSql = phase === "idle" ? a.sql : a.sql.slice(0, sqlN);
   return (
     <section id="nx-ask" className="border-t px-6 py-16 sm:px-10" style={{ borderColor: "var(--nx-line)", background: "var(--nx-bg)" }}>
-      <Reveal>
+      <Reveal dir="left">
         <SectionHead
           lang={lang}
           eyebrow={{ zh: "问数演示 · LIVE DEMO", en: "LIVE DEMO" }}
@@ -416,7 +426,7 @@ function AskDemo({ lang }: { lang: Lang }) {
           desc={{ zh: "点击下面任意一个问题，看 Nexus 如何思考、写 SQL、画出答案。", en: "Click any question below and watch Nexus think, write SQL and chart the answer." }}
         />
       </Reveal>
-      <Reveal delay={140}>
+      <Reveal dir="left" delay={140}>
         <div className="mt-7 flex flex-wrap gap-2.5">
           {ASKS.map((x, i) => (
             <button
@@ -435,7 +445,7 @@ function AskDemo({ lang }: { lang: Lang }) {
           ))}
         </div>
       </Reveal>
-      <Reveal delay={220}>
+      <Reveal dir="right" delay={220}>
         <div className="mt-6 grid overflow-hidden rounded-2xl border shadow-xl lg:grid-cols-[1fr_1.2fr]" style={{ borderColor: "var(--nx-line)", background: "var(--nx-panel)" }}>
           {/* 左：对话/SQL */}
           <div className="p-6 sm:p-7">
@@ -463,7 +473,7 @@ function AskDemo({ lang }: { lang: Lang }) {
                     </span>
                   </div>
                 )}
-                {(phase === "sql" || phase === "done") && (
+                {(phase === "idle" || phase === "sql" || phase === "done") && (
                   <div className="rounded-xl border p-3.5" style={{ borderColor: "var(--nx-line)", background: "rgba(10,14,26,0.7)", ...MONO }}>
                     <div className="text-[10px] tracking-widest" style={{ color: "var(--nx-muted)" }}>SQL · auto-generated</div>
                     <div className="mt-2 text-[11px] leading-5" style={{ color: "var(--nx-acc2)", whiteSpace: "pre-wrap" }}>
@@ -472,7 +482,7 @@ function AskDemo({ lang }: { lang: Lang }) {
                     </div>
                   </div>
                 )}
-                {phase === "done" && (
+                {(phase === "idle" || phase === "done") && (
                   <p className="mt-3 text-[13px] leading-relaxed" style={{ color: "var(--nx-fg)", animation: "nx-fadeup .5s ease both" }}>
                     {L(a.insight, lang)}
                   </p>
@@ -491,7 +501,7 @@ function AskDemo({ lang }: { lang: Lang }) {
                     <div
                       className="w-full rounded-t-md transition-all duration-700"
                       style={{
-                        height: phase === "done" ? `${v}%` : "5%",
+                        height: phase === "think" || phase === "sql" ? "4%" : `${v}%`,
                         transitionDelay: `${i * 90}ms`,
                         background: hi
                           ? "linear-gradient(180deg,var(--nx-acc2),rgba(34,211,238,0.35))"
@@ -531,7 +541,7 @@ function Pipeline({ lang }: { lang: Lang }) {
   const pathToOut = (y: number) => `M448 150 C 522 150, 522 ${y + 17}, 602 ${y + 17}`;
   return (
     <section id="nx-pipeline" className="border-t px-6 py-16 sm:px-10" style={{ borderColor: "var(--nx-line)", background: "var(--nx-panel)" }}>
-      <Reveal>
+      <Reveal dir="right">
         <SectionHead
           lang={lang}
           eyebrow={{ zh: "它是怎么做到的 · 原理", en: "HOW IT WORKS" }}
@@ -539,7 +549,7 @@ function Pipeline({ lang }: { lang: Lang }) {
           desc={{ zh: "CDC 与流式接入双通道，源系统零侵入；数据先落地仓库，再统一建模——所以任何提问都有单一可信答案。", en: "CDC and streaming ingestion, zero footprint on sources; data lands in the warehouse first, then gets modeled once — so every answer has a single source of truth." }}
         />
       </Reveal>
-      <Reveal delay={160}>
+      <Reveal dir="left" delay={160}>
         <div className="mt-8 overflow-x-auto rounded-2xl border p-4" style={{ borderColor: "var(--nx-line)", background: "rgba(10,14,26,0.6)" }}>
           <svg viewBox="0 0 760 300" className="mx-auto block w-full min-w-[560px] max-w-3xl">
             {srcYs.map((y, i) => (
@@ -583,7 +593,7 @@ function Anomaly({ lang }: { lang: Lang }) {
   const points = "0,170 80,164 160,172 240,158 320,168 400,158 480,166 560,46 640,152 720,158";
   return (
     <section id="nx-alert" className="border-t px-6 py-16 sm:px-10" style={{ borderColor: "var(--nx-line)", background: "var(--nx-bg)" }}>
-      <Reveal>
+      <Reveal dir="left">
         <SectionHead
           lang={lang}
           eyebrow={{ zh: "异常预警 · ANOMALY", en: "ANOMALY ALERTS" }}
@@ -592,7 +602,7 @@ function Anomaly({ lang }: { lang: Lang }) {
         />
       </Reveal>
       <div key={k} className="relative">
-        <Reveal delay={160}>
+        <Reveal dir="right" delay={160}>
           <div className="relative mt-8 overflow-hidden rounded-2xl border p-4 sm:p-6" style={{ borderColor: "var(--nx-line)", background: "var(--nx-panel)" }}>
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold" style={{ color: "var(--nx-fg)" }}>
@@ -661,7 +671,7 @@ function Metrics({ lang }: { lang: Lang }) {
     <section className="border-t px-6 py-12 sm:px-10" style={{ borderColor: "var(--nx-line)", background: "var(--nx-panel)" }}>
       <div className="grid grid-cols-2 gap-8 text-center lg:grid-cols-4">
         {stats.map((s, i) => (
-          <Reveal key={s.label.en} delay={i * 110}>
+          <Reveal key={s.label.en} delay={i * 110} dir={i % 2 ? "right" : "left"}>
             <div className="text-3xl font-bold sm:text-4xl" style={{ color: "var(--nx-acc2)" }}>
               <CountUp to={s.to} decimals={s.decimals ?? 0} prefix={s.prefix} suffix={s.suffix} />
             </div>
@@ -685,7 +695,7 @@ function Features({ lang }: { lang: Lang }) {
   ];
   return (
     <section id="nx-features" className="border-t px-6 py-16 sm:px-10" style={{ borderColor: "var(--nx-line)", background: "var(--nx-bg)" }}>
-      <Reveal>
+      <Reveal dir="right">
         <SectionHead
           lang={lang}
           eyebrow={{ zh: "平台能力", en: "PLATFORM" }}
@@ -694,7 +704,7 @@ function Features({ lang }: { lang: Lang }) {
       </Reveal>
       <div className="mt-9 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((f, i) => (
-          <Reveal key={f.title.en} delay={(i % 3) * 120}>
+          <Reveal key={f.title.en} delay={(i % 3) * 120} dir={i % 2 ? "right" : "left"}>
             <div
               className="group h-full rounded-2xl border p-5 transition-all duration-300 hover:-translate-y-1"
               style={{ background: "var(--nx-panel)", borderColor: "var(--nx-line)" }}
@@ -712,28 +722,59 @@ function Features({ lang }: { lang: Lang }) {
   );
 }
 
-/* ================= 生态集成：滚动带 ================= */
+/* ================= 生态集成：连接器网格（同步脉冲，区别于其他模板的滚动带） ================= */
 function Ecosystem({ lang }: { lang: Lang }) {
+  const { ref, inView } = useInView<HTMLDivElement>(0.25);
   const items = ["MySQL", "PostgreSQL", "Kafka", "Snowflake", "MongoDB", "BigQuery", "Stripe", "Salesforce", "HubSpot", "S3", lang === "zh" ? "飞书" : "Feishu", lang === "zh" ? "钉钉" : "DingTalk"];
-  const row = [...items, ...items];
   return (
-    <section id="nx-eco" className="border-t py-6" style={{ borderColor: "var(--nx-line)", background: "var(--nx-panel)" }}>
-      <div className="flex items-center gap-6 overflow-hidden">
-        <span className="shrink-0 pl-6 text-[11px] font-semibold tracking-widest sm:pl-10" style={{ color: "var(--nx-muted)" }}>
-          {L({ zh: "500+ 连接器", en: "500+ CONNECTORS" }, lang)}
-        </span>
-        <div className="relative flex-1 overflow-hidden">
-          <div className="flex w-max items-center gap-10" style={{ animation: "nx-marquee 36s linear infinite" }}>
-            {row.map((it, i) => (
-              <span key={i} className="whitespace-nowrap text-sm font-medium" style={{ color: "var(--nx-muted)", ...MONO }}>
-                {it} <span className="ml-10" style={{ color: "var(--nx-acc)" }}>·</span>
-              </span>
-            ))}
+    <section id="nx-eco" className="border-t px-6 py-14 sm:px-10" style={{ borderColor: "var(--nx-line)", background: "var(--nx-panel)" }}>
+      <div ref={ref} className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <div className="text-[11px] font-bold tracking-[0.22em]" style={{ color: "var(--nx-acc)" }}>
+            {L({ zh: "生态集成", en: "ECOSYSTEM" }, lang)}
           </div>
+          <h2 className="mt-2 text-xl font-semibold" style={{ color: "var(--nx-fg)" }}>
+            {L({ zh: "500+ 连接器，全部在线", en: "500+ connectors, all online" }, lang)}
+          </h2>
         </div>
+        <span
+          className="flex items-center gap-2 rounded-full border px-3 py-1 text-[11px]"
+          style={{ borderColor: "rgba(52,211,153,0.4)", color: "#34D399", background: "rgba(52,211,153,0.08)" }}
+        >
+          <span className="h-1.5 w-1.5 rounded-full" style={{ background: "#34D399", animation: "nx-sync 2.6s ease infinite" }} />
+          {L({ zh: "实时同步中", en: "syncing live" }, lang)}
+        </span>
       </div>
+      <div className="mt-6 grid grid-cols-2 gap-2.5 sm:grid-cols-4 lg:grid-cols-6">
+        {items.map((it, i) => (
+          <div
+            key={it}
+            className="flex items-center justify-between rounded-xl border px-3.5 py-3 transition-all duration-300 hover:-translate-y-0.5"
+            style={{
+              borderColor: "var(--nx-line)",
+              background: "rgba(10,14,26,0.6)",
+              opacity: inView ? 1 : 0,
+              animation: inView ? `nx-chip .5s ease ${(i % 6) * 70 + Math.floor(i / 6) * 140}ms both` : "none",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.borderColor = "rgba(139,92,246,0.55)")}
+            onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--nx-line)")}
+          >
+            <span className="text-xs font-medium" style={{ color: "var(--nx-fg)", ...MONO }}>{it}</span>
+            <span
+              className="h-1.5 w-1.5 rounded-full"
+              style={{ background: i % 3 === 0 ? "var(--nx-acc2)" : "var(--nx-acc)", animation: `nx-sync 2.8s ease ${i * 0.35}s infinite` }}
+            />
+          </div>
+        ))}
+      </div>
+      <p className="mt-5 text-xs leading-relaxed" style={{ color: "var(--nx-muted)" }}>
+        {L(
+          { zh: "CDC、API、文件三通道接入，新增一个数据源平均只需 20 分钟；每个连接器右上角的脉冲点，就是你正在流动的数据。", en: "CDC, API and file ingestion — a new source goes live in ~20 minutes on average. Each pulsing dot is your data in motion." },
+          lang
+        )}
+      </p>
     </section>
-  );
+  )
 }
 
 /* ================= 引言 / CTA / 页脚 / 小节标题 ================= */
