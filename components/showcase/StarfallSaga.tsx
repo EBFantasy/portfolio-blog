@@ -40,7 +40,7 @@ export default function StarfallSaga({ lang, backHref, backLabel }: { lang: Lang
       `}</style>
       <div
         className="mt-6 overflow-hidden rounded-3xl border border-zinc-200 shadow-xl dark:border-zinc-800"
-        style={vars}
+        style={{ ...vars, background: "var(--sf-bg)" }}
       >
         <Hero lang={lang} />
         <VersionBand lang={lang} />

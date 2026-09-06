@@ -32,7 +32,7 @@ export default function MaisonVerte({ lang, backHref, backLabel }: { lang: Lang;
       `}</style>
       <div
         className="mt-6 overflow-hidden rounded-3xl border border-zinc-200 shadow-xl dark:border-zinc-800"
-        style={vars}
+        style={{ ...vars, background: "var(--mv-bg)" }}
       >
         <SiteNav lang={lang} />
         <Hero lang={lang} />

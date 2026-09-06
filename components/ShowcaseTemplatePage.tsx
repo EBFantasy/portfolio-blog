@@ -37,7 +37,7 @@ export default function ShowcaseTemplatePage({
 
       <div
         className="mt-6 overflow-hidden rounded-3xl border border-zinc-200 shadow-xl dark:border-zinc-800"
-        style={vars}
+        style={{ ...vars, background: "var(--sk-bg)" }}
       >
         {/* 模板自有导航栏 */}
         <header

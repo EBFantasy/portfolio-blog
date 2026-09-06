@@ -35,7 +35,7 @@ export default function NexusAI({ lang, backHref, backLabel }: { lang: Lang; bac
       `}</style>
       <div
         className="mt-6 overflow-hidden rounded-3xl border border-zinc-200 shadow-xl dark:border-zinc-800"
-        style={vars}
+        style={{ ...vars, background: "var(--nx-bg)" }}
       >
         <SiteNav lang={lang} />
         <Hero lang={lang} />

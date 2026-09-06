@@ -30,7 +30,7 @@ export default function ApexConsulting({ lang, backHref, backLabel }: { lang: La
       `}</style>
       <div
         className="mt-6 overflow-hidden rounded-3xl border border-zinc-200 shadow-xl dark:border-zinc-800"
-        style={vars}
+        style={{ ...vars, background: "var(--sk-bg)" }}
       >
         <SiteNav lang={lang} />
         <Hero lang={lang} />
