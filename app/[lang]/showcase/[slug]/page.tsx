@@ -5,6 +5,7 @@ import ApexConsulting from "@/components/showcase/ApexConsulting";
 import MaisonVerte from "@/components/showcase/MaisonVerte";
 import NexusAI from "@/components/showcase/NexusAI";
 import PulseAnalytics from "@/components/showcase/PulseAnalytics";
+import StarfallSaga from "@/components/showcase/StarfallSaga";
 import { isValidLocale, type Locale } from "@/lib/i18n";
 import { getTemplate, showcaseUI, templates } from "@/lib/showcase";
 
@@ -53,6 +54,9 @@ export default async function ShowcaseTemplateDetailPage({
   }
   if (slug === "pulse-analytics") {
     return <PulseAnalytics lang={lang} backHref={backHref} backLabel={backLabel} />;
+  }
+  if (slug === "starfall-saga") {
+    return <StarfallSaga lang={lang} backHref={backHref} backLabel={backLabel} />;
   }
 
   return <ShowcaseTemplatePage template={template} lang={lang} backHref={backHref} backLabel={backLabel} />;

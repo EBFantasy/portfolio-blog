@@ -617,7 +617,7 @@ function Anomaly({ lang }: { lang: Lang }) {
                 {L({ zh: "重放动画", en: "Replay" }, lang)}
               </button>
             </div>
-            <div className="relative mt-4">
+            <div className="mt-4 grid items-center gap-4 lg:grid-cols-[1fr_17rem]">
               <svg viewBox="0 0 720 240" className="block w-full">
                 <defs>
                   <linearGradient id="nxArea" x1="0" y1="0" x2="0" y2="1">
@@ -638,7 +638,7 @@ function Anomaly({ lang }: { lang: Lang }) {
               </svg>
               {/* 告警卡 */}
               <div
-                className="mx-auto mt-2 max-w-md rounded-xl border p-4 lg:absolute lg:right-8 lg:top-6 lg:mt-0 lg:w-72"
+                className="max-w-md rounded-xl border p-4 sm:justify-self-end lg:w-full lg:max-w-none"
                 style={{ borderColor: "rgba(251,113,133,0.4)", background: "rgba(251,113,133,0.08)", animation: "nx-fadeup .6s ease .6s both" }}
               >
                 <div className="flex items-center gap-2 text-xs font-bold" style={{ color: "#FB7185" }}>

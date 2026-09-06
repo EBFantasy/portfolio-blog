@@ -74,6 +74,39 @@ function AvatarNet() {
     type Ring = { x: number; y: number; r: number; a: number };
     let avas: Ava[] = [];
     let rings: Ring[] = [];
+    let mapCv: HTMLCanvasElement | null = null;
+    // 大陆近似框 [西经, 东经, 北纬, 南纬]，栅格化成赛博点阵世界地图
+    const LAND: [number, number, number, number][] = [
+      [-165, -140, 68, 54], [-140, -70, 70, 50], [-125, -67, 49, 30], [-115, -88, 32, 15], [-92, -80, 17, 8],
+      [-52, -22, 80, 62], [-24, -13, 66, 63], [-8, 0, 58, 51], [-9, 26, 58, 44], [25, 35, 60, 50], [0, 28, 66, 56],
+      [-78, -36, 11, -18], [-72, -40, -18, -38], [-74, -66, -38, -54],
+      [-16, 33, 35, 12], [-16, 12, 12, 4], [8, 42, 12, -12], [11, 38, -12, -28], [15, 32, -28, -34], [43, 50, -11, -26],
+      [33, 58, 40, 14], [55, 70, 40, 22],
+      [28, 88, 70, 52], [88, 142, 72, 52], [142, 178, 68, 56], [50, 88, 52, 38],
+      [68, 88, 30, 8], [88, 100, 28, 20], [100, 125, 42, 22], [100, 108, 20, 8], [125, 145, 44, 31],
+      [95, 120, 6, -8], [118, 141, 2, -9], [118, 126, 18, 6],
+      [114, 153, -11, -32], [164, 178, -34, -47],
+    ];
+    const renderMap = () => {
+      mapCv = document.createElement("canvas");
+      mapCv.width = w * DPR; mapCv.height = h * DPR;
+      const mctx = mapCv.getContext("2d");
+      if (!mctx) return;
+      mctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+      const s = Math.max(9, Math.min(14, w / 95));
+      for (let px = s / 2; px < w; px += s) {
+        for (let py = h * 0.05; py < h * 0.94; py += s) {
+          const lon = (px / w) * 360 - 180;
+          const lat = 75 - ((py - h * 0.05) / (h * 0.89)) * 130;
+          let land = false;
+          for (const b of LAND) { if (lon >= b[0] && lon <= b[1] && lat <= b[2] && lat >= b[3]) { land = true; break; } }
+          if (!land) continue;
+          const hub = Math.random() < 0.05;
+          mctx.fillStyle = hub ? "rgba(125,211,252,0.5)" : "rgba(56,189,248,0.16)";
+          mctx.beginPath(); mctx.arc(px, py, hub ? 1.6 : 1.05, 0, Math.PI * 2); mctx.fill();
+        }
+      }
+    };
     const inKeepOut = (x: number, y: number) =>
       w > 760 && x > w * 0.27 && x < w * 0.73 && y > h * 0.2 && y < h * 0.8;
     const retarget = (a: Ava) => {
@@ -87,9 +120,15 @@ function AvatarNet() {
     const seed = () => {
       const n = w < 640 ? 7 : 11;
       avas = Array.from({ length: n }, (_, i) => {
+        let sx = 0, sy = 0;
+        for (let tries = 0; tries < 24; tries++) {
+          sx = (0.08 + 0.84 * Math.random()) * w;
+          sy = (0.1 + 0.8 * Math.random()) * h;
+          if (!inKeepOut(sx, sy)) break;
+        }
         const a: Ava = {
-          x: (0.08 + 0.84 * Math.random()) * w,
-          y: (0.1 + 0.8 * Math.random()) * h,
+          x: sx,
+          y: sy,
           tx: 0, ty: 0,
           sp: 0.3 + Math.random() * 0.25,
           r: 12 + Math.random() * 4,
@@ -110,6 +149,7 @@ function AvatarNet() {
       canvas.width = w * DPR; canvas.height = h * DPR;
       ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
       seed();
+      renderMap();
     };
     resize();
     window.addEventListener("resize", resize);
@@ -125,12 +165,15 @@ function AvatarNet() {
     const step = () => {
       frame += 1;
       ctx.clearRect(0, 0, w, h);
-      // 底图网格（地图感）
-      ctx.strokeStyle = "rgba(27,41,66,0.5)";
-      ctx.lineWidth = 1;
-      const g = 56;
-      for (let x = (w % g) / 2; x < w; x += g) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke(); }
-      for (let y = (h % g) / 2; y < h; y += g) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
+      // 赛博点阵世界地图（离屏预渲染）+ 扫描亮带
+      if (mapCv) ctx.drawImage(mapCv, 0, 0, w, h);
+      const scanX = ((frame * 0.6) % (w + 280)) - 140;
+      const grad = ctx.createLinearGradient(scanX - 90, 0, scanX + 90, 0);
+      grad.addColorStop(0, "rgba(56,189,248,0)");
+      grad.addColorStop(0.5, "rgba(56,189,248,0.07)");
+      grad.addColorStop(1, "rgba(56,189,248,0)");
+      ctx.fillStyle = grad;
+      ctx.fillRect(scanX - 90, 0, 180, h);
       // 移动：朝目标走（模拟用户在页面间游走），到达后停顿再换目标
       for (const a of avas) {
         const dx = a.tx - a.x, dy = a.ty - a.y;
