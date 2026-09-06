@@ -37,6 +37,9 @@ export default function StarfallSaga({ lang, backHref, backLabel }: { lang: Lang
         .sf-newsrow:hover { background: rgba(232,193,90,.05) !important; }
         .sf-thumb:hover .sf-thumbimg { transform: scale(1.06); }
         .sf-thumb:hover .sf-play { transform: scale(1.12); }
+        .sf-dl { color: var(--sf-fg); transition: background .2s ease, color .2s ease, transform .2s ease; }
+        .sf-dl:hover { background: var(--sf-gold) !important; color: #000 !important; transform: translateY(-1px); }
+        .sf-dl:hover .sf-dl-sub { color: rgba(0,0,0,.65) !important; }
       `}</style>
       <div
         className="mt-6 overflow-hidden rounded-3xl border border-zinc-200 shadow-xl dark:border-zinc-800"
@@ -574,12 +577,12 @@ function Download({ lang }: { lang: Lang }) {
               <a
                 key={p.name}
                 href="#sf-download"
-                className="flex w-64 items-center justify-between border px-5 py-3 transition hover:bg-[color:var(--sf-gold)] hover:text-black"
+                className="sf-dl flex w-64 items-center justify-between border px-5 py-3"
                 style={{ borderColor: "var(--sf-line)", background: "rgba(12,15,26,0.7)" }}
               >
                 <span className="text-left">
-                  <span className="block text-sm font-bold" style={{ color: "inherit" }}>{p.name}</span>
-                  <span className="block text-[10px] tracking-wider" style={{ color: "var(--sf-muted)" }}>{L(p.sub, lang)}</span>
+                  <span className="block text-sm font-bold">{p.name}</span>
+                  <span className="sf-dl-sub block text-[10px] tracking-wider" style={{ color: "var(--sf-muted)" }}>{L(p.sub, lang)}</span>
                 </span>
                 <span className="text-lg">↓</span>
               </a>
