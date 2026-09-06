@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import ShowcaseTemplatePage from "@/components/ShowcaseTemplatePage";
+import ApexConsulting from "@/components/showcase/ApexConsulting";
+import MaisonVerte from "@/components/showcase/MaisonVerte";
 import { isValidLocale, type Locale } from "@/lib/i18n";
 import { getTemplate, showcaseUI, templates } from "@/lib/showcase";
 
@@ -34,12 +36,16 @@ export default async function ShowcaseTemplateDetailPage({
   const template = getTemplate(slug);
   if (!template) notFound();
 
-  return (
-    <ShowcaseTemplatePage
-      template={template}
-      lang={lang}
-      backHref={`/${lang}/showcase`}
-      backLabel={showcaseUI.back[lang === "en" ? "en" : "zh"]}
-    />
-  );
+  const backHref = `/${lang}/showcase`;
+  const backLabel = showcaseUI.back[lang === "en" ? "en" : "zh"];
+
+  /* 深度定制版：apex-consulting 与 maison-verte 拥有专属组件（图片 + 动画 + 交互） */
+  if (slug === "apex-consulting") {
+    return <ApexConsulting lang={lang} backHref={backHref} backLabel={backLabel} />;
+  }
+  if (slug === "maison-verte") {
+    return <MaisonVerte lang={lang} backHref={backHref} backLabel={backLabel} />;
+  }
+
+  return <ShowcaseTemplatePage template={template} lang={lang} backHref={backHref} backLabel={backLabel} />;
 }
