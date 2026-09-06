@@ -9,17 +9,18 @@ type Bi = { zh: string; en: string };
 const L = (b: Bi, lang: Lang) => b[lang === "en" ? "en" : "zh"];
 
 const vars = {
-  "--na-bg": "#1B2838",
-  "--na-deep": "#171A21",
-  "--na-panel": "#16202D",
-  "--na-line": "#2A475E",
-  "--na-fg": "#C7D5E0",
+  "--na-bg": "#191522",
+  "--na-deep": "#120F1A",
+  "--na-panel": "#221B30",
+  "--na-line": "#3A3050",
+  "--na-fg": "#E4DCEF",
   "--na-bright": "#FFFFFF",
-  "--na-muted": "#8F98A0",
-  "--na-blue": "#66C0F4",
+  "--na-muted": "#9C93AD",
+  "--na-acc": "#FF5C8A",
+  "--na-violet": "#B18CFF",
   "--na-pink": "#FF2E88",
-  "--na-green": "#BEEE11",
-  "--na-offbg": "#4C6B22",
+  "--na-sale": "#FF8FAF",
+  "--na-offbg": "#6E1B3C",
 } as CSSProperties;
 
 const MONO = { fontFamily: "ui-monospace, 'Cascadia Code', 'JetBrains Mono', Consolas, monospace" };
@@ -66,12 +67,12 @@ export default function NeonArcade({ lang, backHref, backLabel }: { lang: Lang; 
         @keyframes na-pop { 0% { transform: scale(1); } 45% { transform: scale(1.5); } 100% { transform: scale(1); } }
         @keyframes na-toast { 0% { opacity: 0; transform: translateY(14px); } 12% { opacity: 1; transform: none; } 85% { opacity: 1; } 100% { opacity: 0; } }
         .na-card { transition: transform .25s ease, box-shadow .25s ease, outline-color .25s ease; outline: 1px solid transparent; }
-        .na-card:hover { transform: translateY(-3px); outline-color: rgba(102,192,244,.65); box-shadow: 0 10px 26px rgba(0,0,0,.5), 0 0 18px rgba(102,192,244,.18); }
-        .na-link { color: var(--na-blue); transition: color .15s ease; }
+        .na-card:hover { transform: translateY(-3px); outline-color: rgba(255,92,138,.65); box-shadow: 0 10px 26px rgba(0,0,0,.5), 0 0 18px rgba(255,92,138,.15); }
+        .na-link { color: var(--na-acc); transition: color .15s ease; }
         .na-link:hover { color: var(--na-bright); }
-        .na-off { background: var(--na-offbg); color: var(--na-green); font-weight: 700; padding: 2px 7px; font-size: 15px; }
+        .na-off { background: var(--na-offbg); color: var(--na-sale); font-weight: 700; padding: 2px 7px; font-size: 15px; }
         .na-input { background: rgba(0,0,0,.35); border: 1px solid var(--na-line); color: var(--na-fg); transition: border-color .2s ease; }
-        .na-input:focus { outline: none; border-color: var(--na-blue); }
+        .na-input:focus { outline: none; border-color: var(--na-acc); }
         .na-input::placeholder { color: var(--na-muted); }
         .na-tabbtn { transition: background .2s ease, color .2s ease; }
         .na-chip { transition: all .18s ease; }
@@ -92,7 +93,7 @@ export default function NeonArcade({ lang, backHref, backLabel }: { lang: Lang; 
           <div
             key={store.toast}
             className="fixed bottom-6 right-6 z-50 rounded px-4 py-3 text-xs font-semibold shadow-2xl"
-            style={{ background: "#2A475E", color: "var(--na-bright)", border: "1px solid var(--na-blue)", animation: "na-toast 2.2s ease both" }}
+            style={{ background: "#2E2540", color: "var(--na-bright)", border: "1px solid var(--na-acc)", animation: "na-toast 2.2s ease both" }}
           >
             ✓ {L({ zh: "已加入购物车", en: "Added to cart" }, lang)}：{store.toast}
           </div>
@@ -126,7 +127,7 @@ function StoreHeader({ lang, store }: { lang: Lang; store: ReturnType<typeof use
       <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-5 py-3">
         <a href="#na-top" className="flex items-baseline gap-2">
           <span className="text-base font-black tracking-widest" style={{ color: "var(--na-pink)" }}>NEON</span>
-          <span className="text-base font-black tracking-widest" style={{ color: "var(--na-blue)" }}>ARCADE</span>
+          <span className="text-base font-black tracking-widest" style={{ color: "var(--na-violet)" }}>ARCADE</span>
           <span className="hidden text-[11px] tracking-[0.3em] sm:inline" style={{ color: "var(--na-muted)" }}>
             {L({ zh: "霓虹街机", en: "霓虹街机" }, lang)}
           </span>
@@ -170,7 +171,7 @@ function StoreNav({ lang, store }: { lang: Lang; store: ReturnType<typeof useSto
     [{ zh: "全部游戏", en: "Browse" }, "#na-catalog"],
   ];
   return (
-    <nav className="border-y" style={{ borderColor: "rgba(0,0,0,0.35)", background: "linear-gradient(180deg, rgba(42,71,94,0.35), rgba(27,40,56,0))" }}>
+    <nav className="border-y" style={{ borderColor: "rgba(0,0,0,0.35)", background: "linear-gradient(180deg, rgba(58,48,80,0.35), rgba(25,21,34,0))" }}>
       <div className="mx-auto flex max-w-5xl items-center gap-6 overflow-x-auto px-5 py-2.5 text-xs">
         {items.map(([label, href]) => (
           <a key={href} href={href} className="na-link whitespace-nowrap font-medium">{L(label, lang)}</a>
@@ -197,7 +198,7 @@ function Featured({ lang, store }: { lang: Lang; store: ReturnType<typeof useSto
     <section id="na-featured" className="mx-auto max-w-5xl px-5 pt-6">
       <div
         className="grid overflow-hidden rounded md:grid-cols-[1.6fr_1fr]"
-        style={{ background: "linear-gradient(180deg,#2A475E 0%,#1B2838 100%)" }}
+        style={{ background: "linear-gradient(180deg,#2E2540 0%,#191522 100%)" }}
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
       >
@@ -241,7 +242,7 @@ function Featured({ lang, store }: { lang: Lang; store: ReturnType<typeof useSto
                 aria-label={`slide ${i + 1}`}
                 onClick={() => setIdx(i)}
                 className="h-1.5 rounded-full transition-all duration-300"
-                style={{ width: i === idx ? 22 : 8, background: i === idx ? "var(--na-blue)" : "rgba(255,255,255,0.4)" }}
+                style={{ width: i === idx ? 22 : 8, background: i === idx ? "var(--na-acc)" : "rgba(255,255,255,0.4)" }}
               />
             ))}
           </div>
@@ -250,7 +251,7 @@ function Featured({ lang, store }: { lang: Lang; store: ReturnType<typeof useSto
         <div key={g.id} className="flex flex-col gap-3 p-5" style={{ animation: "na-in .45s ease both" }}>
           <div className="text-lg font-bold leading-snug" style={{ color: "var(--na-bright)" }}>{L(g.title, lang)}</div>
           {g.review && (
-            <span className="w-fit rounded px-2 py-0.5 text-[10px] font-bold" style={{ background: "rgba(102,192,244,0.14)", color: "var(--na-blue)" }}>
+            <span className="w-fit rounded px-2 py-0.5 text-[10px] font-bold" style={{ background: "rgba(255,92,138,0.14)", color: "var(--na-acc)" }}>
               {L(g.review, lang)}
             </span>
           )}
@@ -265,7 +266,7 @@ function Featured({ lang, store }: { lang: Lang; store: ReturnType<typeof useSto
           </p>
           <div className="flex flex-wrap gap-1.5">
             {g.tags.map((t) => (
-              <button key={t} type="button" onClick={() => { store.setTag(t); }} className="na-chip rounded px-2 py-0.5 text-[10px]" style={{ background: "rgba(103,193,245,0.15)", color: "var(--na-blue)" }}>
+              <button key={t} type="button" onClick={() => { store.setTag(t); }} className="na-chip rounded px-2 py-0.5 text-[10px]" style={{ background: "rgba(255,92,138,0.15)", color: "var(--na-acc)" }}>
                 {t}
               </button>
             ))}
@@ -276,7 +277,7 @@ function Featured({ lang, store }: { lang: Lang; store: ReturnType<typeof useSto
               type="button"
               onClick={() => store.addToCart(g.title, lang)}
               className="rounded px-4 py-2 text-xs font-bold text-white transition hover:brightness-125 active:scale-95"
-              style={{ background: "linear-gradient(180deg,#67C1F5,#417A9B)" }}
+              style={{ background: "linear-gradient(180deg,#FF5C8A,#C2255C)" }}
             >
               {L({ zh: "加入购物车", en: "Add to Cart" }, lang)}
             </button>
@@ -320,14 +321,14 @@ function DailyDeal({ lang, store }: { lang: Lang; store: ReturnType<typeof useSt
           </h2>
           <span className="text-[11px]" style={{ color: "var(--na-muted)" }}>
             {L({ zh: "每日特惠倒计时", en: "Daily deal ends in" }, lang)}{" "}
-            <b style={{ color: "var(--na-green)", ...MONO }}>{left}</b>
+            <b style={{ color: "var(--na-sale)", ...MONO }}>{left}</b>
           </span>
         </div>
       </Reveal>
       <Reveal dir="right" delay={120}>
         <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[GAMES[1], GAMES[2], GAMES[3], GAMES[4]].map((g) => (
-            <div key={g.id} className="na-card overflow-hidden rounded" style={{ background: "linear-gradient(180deg,#2A475E 0%,#1B2838 100%)" }}>
+            <div key={g.id} className="na-card overflow-hidden rounded" style={{ background: "linear-gradient(180deg,#2E2540 0%,#191522 100%)" }}>
               <div className="relative aspect-[460/215] overflow-hidden">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={g.img} alt={g.title.en} className="h-full w-full object-cover" />
@@ -341,7 +342,6 @@ function DailyDeal({ lang, store }: { lang: Lang; store: ReturnType<typeof useSt
                 <div className="min-w-0">
                   <div className="truncate text-xs font-semibold" style={{ color: "var(--na-fg)" }}>{L(g.title, lang)}</div>
                   <div className="mt-1 flex items-center gap-1.5">
-                    {g.discount > 0 && <span className="na-off">-{g.discount}%</span>}
                     <PriceTag g={g} compact />
                   </div>
                 </div>
@@ -349,7 +349,7 @@ function DailyDeal({ lang, store }: { lang: Lang; store: ReturnType<typeof useSt
                   type="button"
                   onClick={() => store.addToCart(g.title, lang)}
                   className="shrink-0 rounded px-2.5 py-1.5 text-[10px] font-bold text-white transition hover:brightness-125 active:scale-95"
-                  style={{ background: "linear-gradient(180deg,#67C1F5,#417A9B)" }}
+                  style={{ background: "linear-gradient(180deg,#FF5C8A,#C2255C)" }}
                 >
                   +
                 </button>
@@ -382,7 +382,7 @@ function CategoryRow({ lang, store }: { lang: Lang; store: ReturnType<typeof use
               className="na-chip rounded-full border px-4 py-1.5 text-xs font-medium"
               style={
                 store.tag === t
-                  ? { borderColor: "var(--na-blue)", color: "var(--na-blue)", background: "rgba(102,192,244,0.12)" }
+                  ? { borderColor: "var(--na-acc)", color: "var(--na-acc)", background: "rgba(255,92,138,0.12)" }
                   : { borderColor: "var(--na-line)", color: "var(--na-muted)", background: "rgba(0,0,0,0.2)" }
               }
             >
@@ -416,7 +416,7 @@ function TabbedRows({ lang, store }: { lang: Lang; store: ReturnType<typeof useS
               type="button"
               onClick={() => setTab(i)}
               className="na-tabbtn rounded-t px-4 py-2 text-xs font-semibold"
-              style={i === tab ? { background: "rgba(102,192,244,0.14)", color: "var(--na-blue)" } : { color: "var(--na-muted)" }}
+              style={i === tab ? { background: "rgba(255,92,138,0.14)", color: "var(--na-acc)" } : { color: "var(--na-muted)" }}
             >
               {L(r.label, lang)}
             </button>
@@ -442,7 +442,6 @@ function TabbedRows({ lang, store }: { lang: Lang; store: ReturnType<typeof useS
               <div className="min-w-0">
                 <div className="truncate text-xs font-semibold" style={{ color: "var(--na-fg)" }}>{L(g.title, lang)}</div>
                 <div className="mt-1 flex items-center gap-1.5">
-                  {g.discount > 0 && <span className="na-off">-{g.discount}%</span>}
                   <PriceTag g={g} compact />
                 </div>
               </div>
@@ -450,7 +449,7 @@ function TabbedRows({ lang, store }: { lang: Lang; store: ReturnType<typeof useS
                 type="button"
                 onClick={() => store.addToCart(g.title, lang)}
                 className="shrink-0 rounded px-2.5 py-1.5 text-[10px] font-bold text-white transition hover:brightness-125 active:scale-95"
-                style={{ background: "linear-gradient(180deg,#67C1F5,#417A9B)" }}
+                style={{ background: "linear-gradient(180deg,#FF5C8A,#C2255C)" }}
               >
                 +
               </button>
@@ -498,39 +497,37 @@ function Catalog({ lang, store }: { lang: Lang; store: ReturnType<typeof useStor
           {list.map((g, i) => (
             <div
               key={g.id}
-              className="na-card grid overflow-hidden rounded sm:grid-cols-[1fr_auto]"
+              className="na-card overflow-hidden rounded"
               style={{ background: "var(--na-panel)", animation: `na-in .4s ease ${Math.min(i, 8) * 60}ms both` }}
             >
-              <div className="flex min-w-0 gap-3 p-3">
-                <div className="h-16 w-28 shrink-0 overflow-hidden rounded">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={g.img} alt={g.title.en} className="h-full w-full object-cover" />
-                </div>
-                <div className="min-w-0">
-                  <div className="truncate text-xs font-bold" style={{ color: "var(--na-bright)" }}>{L(g.title, lang)}</div>
-                  <div className="mt-0.5 text-[10px]" style={{ color: "var(--na-muted)" }}>{L(g.studio, lang)}</div>
-                  <div className="mt-1.5 flex flex-wrap gap-1">
-                    {g.tags.slice(0, 3).map((t) => (
-                      <span key={t} className="rounded px-1.5 py-0.5 text-[9px]" style={{ background: "rgba(103,193,245,0.12)", color: "var(--na-blue)" }}>{t}</span>
-                    ))}
-                  </div>
-                  <div className="mt-1.5">
-                    <PriceTag g={g} compact />
-                  </div>
-                </div>
+              <div className="relative aspect-[460/215] overflow-hidden">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={g.img} alt={g.title.en} className="h-full w-full object-cover" />
+                {g.soon && (
+                  <span className="absolute left-2 top-2 rounded px-2 py-0.5 text-[10px] font-bold" style={{ background: "var(--na-pink)", color: "#fff" }}>
+                    {L({ zh: "预售", en: "PRE-ORDER" }, lang)}
+                  </span>
+                )}
               </div>
-              <div className="flex items-center justify-between gap-2 border-t p-2.5 sm:w-28 sm:flex-col sm:justify-center sm:border-l sm:border-t-0" style={{ borderColor: "var(--na-line)" }}>
-                <button
-                  type="button"
-                  onClick={() => store.addToCart(g.title, lang)}
-                  className="w-full rounded py-1.5 text-[10px] font-bold text-white transition hover:brightness-125 active:scale-95"
-                  style={{ background: "linear-gradient(180deg,#67C1F5,#417A9B)" }}
-                >
-                  {L({ zh: "加入购物车", en: "Add to Cart" }, lang)}
-                </button>
-                <span className="text-center text-[9px]" style={{ color: "var(--na-muted)" }}>
-                  {g.soon ? L({ zh: "预售中", en: "Pre-order" }, lang) : L({ zh: "即刻发货", en: "Instant delivery" }, lang)}
-                </span>
+              <div className="p-3">
+                <div className="truncate text-xs font-bold" style={{ color: "var(--na-bright)" }}>{L(g.title, lang)}</div>
+                <div className="mt-0.5 text-[10px]" style={{ color: "var(--na-muted)" }}>{L(g.studio, lang)}</div>
+                <div className="mt-1.5 flex flex-wrap gap-1">
+                  {g.tags.slice(0, 3).map((t) => (
+                    <span key={t} className="rounded px-1.5 py-0.5 text-[9px]" style={{ background: "rgba(255,92,138,0.12)", color: "var(--na-acc)" }}>{t}</span>
+                  ))}
+                </div>
+                <div className="mt-2.5 flex items-center justify-between gap-2">
+                  <PriceTag g={g} compact />
+                  <button
+                    type="button"
+                    onClick={() => store.addToCart(g.title, lang)}
+                    className="shrink-0 rounded px-3 py-1.5 text-[10px] font-bold text-white transition hover:brightness-125 active:scale-95"
+                    style={{ background: "linear-gradient(180deg,#FF5C8A,#C2255C)" }}
+                  >
+                    {L({ zh: "加入购物车", en: "Add to Cart" }, lang)}
+                  </button>
+                </div>
               </div>
             </div>
           ))}
@@ -547,7 +544,7 @@ function PriceTag({ g, compact = false }: { g: Game; compact?: boolean }) {
       <span className="inline-flex items-center gap-1.5">
         <span className={compact ? "na-off" : "na-off"} style={compact ? { fontSize: 11, padding: "1px 5px" } : undefined}>-{g.discount}%</span>
         <span className="text-[10px] line-through" style={{ color: "var(--na-muted)" }}>¥{g.price}</span>
-        <span className={`font-bold ${compact ? "text-[11px]" : "text-sm"}`} style={{ color: "var(--na-green)" }}>¥{finalPrice(g)}</span>
+        <span className={`font-bold ${compact ? "text-[11px]" : "text-sm"}`} style={{ color: "var(--na-sale)" }}>¥{finalPrice(g)}</span>
       </span>
     );
   }
@@ -566,7 +563,7 @@ function Footer({ lang }: { lang: Lang }) {
         <div>
           <div className="flex items-baseline gap-2">
             <span className="text-base font-black tracking-widest" style={{ color: "var(--na-pink)" }}>NEON</span>
-            <span className="text-base font-black tracking-widest" style={{ color: "var(--na-blue)" }}>ARCADE</span>
+            <span className="text-base font-black tracking-widest" style={{ color: "var(--na-violet)" }}>ARCADE</span>
           </div>
           <p className="mt-3 max-w-sm text-[11px] leading-relaxed" style={{ color: "var(--na-muted)" }}>
             {L(
@@ -577,7 +574,7 @@ function Footer({ lang }: { lang: Lang }) {
         </div>
         {cols.map((c) => (
           <div key={c.head.en}>
-            <div className="text-[11px] font-bold tracking-[0.25em]" style={{ color: "var(--na-blue)" }}>{L(c.head, lang)}</div>
+            <div className="text-[11px] font-bold tracking-[0.25em]" style={{ color: "var(--na-acc)" }}>{L(c.head, lang)}</div>
             <ul className="mt-3 space-y-2">
               {c.links.map((l) => (
                 <li key={l.en}>
