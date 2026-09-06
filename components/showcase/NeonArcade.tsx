@@ -54,6 +54,21 @@ const GAMES: Game[] = [
 const FEATURED = [GAMES[0], GAMES[1], GAMES[2]];
 const TAGS = ["全部", "动作", "RPG", "策略", "机甲", "模拟", "像素", "肉鸽", "冒险", "剧情", "赛博朋克", "DLC"];
 
+const TAG_BI: Record<string, Bi> = {
+  "全部": { zh: "全部", en: "All" },
+  "动作": { zh: "动作", en: "Action" },
+  "RPG": { zh: "RPG", en: "RPG" },
+  "策略": { zh: "策略", en: "Strategy" },
+  "机甲": { zh: "机甲", en: "Mecha" },
+  "模拟": { zh: "模拟", en: "Sim" },
+  "像素": { zh: "像素", en: "Pixel" },
+  "肉鸽": { zh: "肉鸽", en: "Roguelike" },
+  "冒险": { zh: "冒险", en: "Adventure" },
+  "剧情": { zh: "剧情", en: "Story" },
+  "赛博朋克": { zh: "赛博朋克", en: "Cyberpunk" },
+  "DLC": { zh: "DLC", en: "DLC" },
+};
+
 const finalPrice = (g: Game) => Math.round((g.price * (100 - g.discount)) / 100);
 
 export default function NeonArcade({ lang, backHref, backLabel }: { lang: Lang; backHref: string; backLabel: string }) {
@@ -267,7 +282,7 @@ function Featured({ lang, store }: { lang: Lang; store: ReturnType<typeof useSto
           <div className="flex flex-wrap gap-1.5">
             {g.tags.map((t) => (
               <button key={t} type="button" onClick={() => { store.setTag(t); }} className="na-chip rounded px-2 py-0.5 text-[10px]" style={{ background: "rgba(255,92,138,0.15)", color: "var(--na-acc)" }}>
-                {t}
+                {L(TAG_BI[t], lang)}
               </button>
             ))}
           </div>
@@ -386,7 +401,7 @@ function CategoryRow({ lang, store }: { lang: Lang; store: ReturnType<typeof use
                   : { borderColor: "var(--na-line)", color: "var(--na-muted)", background: "rgba(0,0,0,0.2)" }
               }
             >
-              {t}
+              {L(TAG_BI[t], lang)}
             </button>
           ))}
         </div>
@@ -511,7 +526,7 @@ function Catalog({ lang, store }: { lang: Lang; store: ReturnType<typeof useStor
                 <div className="mt-0.5 text-[10px]" style={{ color: "var(--na-muted)" }}>{L(g.studio, lang)}</div>
                 <div className="mt-1.5 flex flex-wrap gap-1">
                   {g.tags.slice(0, 3).map((t) => (
-                    <span key={t} className="rounded px-1.5 py-0.5 text-[9px]" style={{ background: "rgba(255,92,138,0.12)", color: "var(--na-acc)" }}>{t}</span>
+                    <span key={t} className="rounded px-1.5 py-0.5 text-[9px]" style={{ background: "rgba(255,92,138,0.12)", color: "var(--na-acc)" }}>{L(TAG_BI[t], lang)}</span>
                   ))}
                 </div>
                 <div className="mt-2.5 flex items-center justify-between gap-2">

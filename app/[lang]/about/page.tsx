@@ -1,3 +1,4 @@
+import { Reveal } from "@/components/showcase/reveal";
 import { getDict, isValidLocale, type Locale } from "@/lib/i18n";
 
 export default async function AboutPage({
@@ -36,46 +37,54 @@ export default async function AboutPage({
 
   return (
     <div className="py-14">
-      <h1 className="text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
-        {dict.about.title}
-      </h1>
-      <p className="mt-3 text-zinc-500 dark:text-zinc-400">{dict.siteTagline}</p>
+      <Reveal>
+        <h1 className="text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+          {dict.about.title}
+        </h1>
+        <p className="mt-3 text-zinc-500 dark:text-zinc-400">{dict.siteTagline}</p>
+      </Reveal>
 
-      <div className="mt-10 max-w-2xl space-y-4 leading-relaxed text-zinc-600 dark:text-zinc-300">
-        {skills.bio.map((para, i) => (
-          <p key={i}>{para}</p>
-        ))}
-      </div>
+      <Reveal delay={120}>
+        <div className="mt-10 max-w-2xl space-y-4 leading-relaxed text-zinc-600 dark:text-zinc-300">
+          {skills.bio.map((para, i) => (
+            <p key={i}>{para}</p>
+          ))}
+        </div>
+      </Reveal>
 
-      <h2 className="mt-12 text-lg font-medium text-zinc-900 dark:text-zinc-50">{dict.about.skills}</h2>
-      <div className="mt-5 grid gap-4 sm:grid-cols-3">
-        {skills.groups.map((g) => (
-          <div key={g.name} className="rounded-2xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
-            <h3 className="text-sm font-medium text-zinc-900 dark:text-zinc-50">{g.name}</h3>
-            <ul className="mt-3 space-y-1.5">
-              {g.items.map((item) => (
-                <li key={item} className="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
-                  <span className="h-1 w-1 rounded-full bg-emerald-500" />
-                  {item}
-                </li>
-              ))}
-            </ul>
+      <Reveal dir="left" delay={100}>
+        <h2 className="mt-12 text-lg font-medium text-zinc-900 dark:text-zinc-50">{dict.about.skills}</h2>
+        <div className="mt-5 grid gap-4 sm:grid-cols-3">
+          {skills.groups.map((g) => (
+            <div key={g.name} className="rounded-2xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
+              <h3 className="text-sm font-medium text-zinc-900 dark:text-zinc-50">{g.name}</h3>
+              <ul className="mt-3 space-y-1.5">
+                {g.items.map((item) => (
+                  <li key={item} className="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
+                    <span className="h-1 w-1 rounded-full bg-emerald-500" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </Reveal>
+
+      <Reveal dir="right" delay={100}>
+        <h2 className="mt-12 text-lg font-medium text-zinc-900 dark:text-zinc-50">{dict.about.contact}</h2>
+        <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">{dict.about.contactDesc}</p>
+        <div className="mt-5 flex flex-wrap gap-3">
+          <div className="rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm dark:border-zinc-800 dark:bg-zinc-900">
+            <span className="text-zinc-400">{dict.about.wechat}</span>
+            <span className="ml-2 font-medium text-zinc-700 dark:text-zinc-200">EBFantasy</span>
           </div>
-        ))}
-      </div>
-
-      <h2 className="mt-12 text-lg font-medium text-zinc-900 dark:text-zinc-50">{dict.about.contact}</h2>
-      <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">{dict.about.contactDesc}</p>
-      <div className="mt-5 flex flex-wrap gap-3">
-        <div className="rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm dark:border-zinc-800 dark:bg-zinc-900">
-          <span className="text-zinc-400">{dict.about.wechat}</span>
-          <span className="ml-2 font-medium text-zinc-700 dark:text-zinc-200">EBFantasy</span>
+          <div className="rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm dark:border-zinc-800 dark:bg-zinc-900">
+            <span className="text-zinc-400">{dict.about.email}</span>
+            <span className="ml-2 font-medium text-zinc-700 dark:text-zinc-200">your@email.com</span>
+          </div>
         </div>
-        <div className="rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm dark:border-zinc-800 dark:bg-zinc-900">
-          <span className="text-zinc-400">{dict.about.email}</span>
-          <span className="ml-2 font-medium text-zinc-700 dark:text-zinc-200">your@email.com</span>
-        </div>
-      </div>
+      </Reveal>
     </div>
   );
 }

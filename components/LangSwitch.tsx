@@ -8,6 +8,8 @@ export default function LangSwitch({ lang, label }: { lang: Locale; label: strin
 
   function switchLang() {
     const target = lang === "zh" ? "en" : "zh";
+    // 持久化语言选择：中间件按该 cookie 决定无前缀路径的去向
+    document.cookie = `NEXT_LOCALE=${target}; path=/; max-age=31536000; samesite=lax`;
     const segments = pathname.split("/");
     segments[1] = target;
     window.location.href = segments.join("/") || `/${target}`;

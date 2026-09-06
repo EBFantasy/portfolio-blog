@@ -120,6 +120,9 @@ export default function ReportPipeline({ lang, backHref, backLabel }: { lang: La
       <BackToCase href={backHref} label={backLabel} />
       <style>{`
         @keyframes rp-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+        @keyframes rp-sec { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+        .rp-a { animation: rp-sec .6s ease both; }
+        .rp-b { animation: rp-sec .6s ease .15s both; }
         @keyframes rp-fly { from { opacity: 0; transform: translateX(-26px) scale(.95); } to { opacity: 1; transform: none; } }
         .rp-bar { transition: width .45s ease; }
       `}</style>
@@ -128,7 +131,7 @@ export default function ReportPipeline({ lang, backHref, backLabel }: { lang: La
         style={{ ...vars, background: "var(--rp-bg)" }}
       >
         {/* 头部 */}
-        <div className="border-b px-6 py-8 sm:px-10" style={{ borderColor: "var(--rp-line)" }}>
+        <div className="rp-a border-b px-6 py-8 sm:px-10" style={{ borderColor: "var(--rp-line)" }}>
           <span className="rounded-full px-2.5 py-1 text-xs font-semibold" style={{ background: "rgba(167,139,250,0.14)", color: "var(--rp-acc)" }}>
             {L({ zh: "自动化 Demo · 报表流水线", en: "Automation Demo · Report Pipeline" }, lang)}
           </span>
@@ -146,7 +149,7 @@ export default function ReportPipeline({ lang, backHref, backLabel }: { lang: La
           </p>
         </div>
 
-        <div className="grid gap-5 p-6 sm:p-8 lg:grid-cols-[1fr_1.5fr]">
+        <div className="rp-b grid gap-5 p-6 sm:p-8 lg:grid-cols-[1fr_1.5fr]">
           {/* 左：源文件 */}
           <div className="flex flex-col gap-4">
             <div className="rounded-2xl border p-4" style={{ borderColor: "var(--rp-line)", background: "var(--rp-panel)" }}>

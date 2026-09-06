@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import PricingPlayground from "@/components/PricingPlayground";
 import BackToCase from "@/components/BackToCase";
+import { Reveal } from "@/components/showcase/reveal";
 import { getDict, isValidLocale, type Locale } from "@/lib/i18n";
 
 export function generateStaticParams() {
@@ -33,22 +34,26 @@ export default async function PricingPlaygroundPage({
 
   return (
     <div className="py-14">
-      <BackToCase href={`/${lang}/work/saas-pricing`} label={p.backToCase} />
+      <BackToCase href={`/${lang}/work`} label={dict.work.detail.backToWork} />
 
-      <div className="mt-6">
-        <span className="rounded-full bg-sky-500/10 px-2.5 py-1 text-xs text-sky-600 dark:text-sky-400">
-          {p.badge}
-        </span>
-        <h1 className="mt-3 text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
-          {p.productName}
-        </h1>
-        <p className="mt-1 text-sm text-zinc-400">{p.productMeta}</p>
-        <p className="mt-4 max-w-2xl text-sm leading-relaxed text-zinc-500 dark:text-zinc-400">
-          {p.intro}
-        </p>
-      </div>
+      <Reveal>
+        <div className="mt-6">
+          <span className="rounded-full bg-sky-500/10 px-2.5 py-1 text-xs text-sky-600 dark:text-sky-400">
+            {p.badge}
+          </span>
+          <h1 className="mt-3 text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+            {p.productName}
+          </h1>
+          <p className="mt-1 text-sm text-zinc-400">{p.productMeta}</p>
+          <p className="mt-4 max-w-2xl text-sm leading-relaxed text-zinc-500 dark:text-zinc-400">
+            {p.intro}
+          </p>
+        </div>
+      </Reveal>
 
-      <PricingPlayground dict={p} lang={lang} />
+      <Reveal delay={150}>
+        <PricingPlayground dict={p} lang={lang} />
+      </Reveal>
     </div>
   );
 }

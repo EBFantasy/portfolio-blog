@@ -128,6 +128,9 @@ export default function PriceMonitor({ lang, backHref, backLabel }: { lang: Lang
       <BackToCase href={backHref} label={backLabel} />
       <style>{`
         @keyframes pm-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+        @keyframes pm-sec { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+        .pm-a { animation: pm-sec .6s ease both; }
+        .pm-b { animation: pm-sec .6s ease .15s both; }
         @keyframes pm-alert { 0% { opacity: 0; transform: scale(.92); } 55% { opacity: 1; transform: scale(1.04); } 100% { opacity: 1; transform: none; } }
         @keyframes pm-dot { 0% { r: 4; opacity: 1; } 100% { r: 12; opacity: 0; } }
         .pm-slider { accent-color: var(--pm-acc); }
@@ -137,7 +140,7 @@ export default function PriceMonitor({ lang, backHref, backLabel }: { lang: Lang
         style={{ ...vars, background: "var(--pm-bg)" }}
       >
         {/* 头部 */}
-        <div className="border-b px-6 py-8 sm:px-10" style={{ borderColor: "var(--pm-line)" }}>
+        <div className="pm-a border-b px-6 py-8 sm:px-10" style={{ borderColor: "var(--pm-line)" }}>
           <span className="rounded-full px-2.5 py-1 text-xs font-semibold" style={{ background: "rgba(56,189,248,0.12)", color: "var(--pm-acc)" }}>
             {L({ zh: "自动化 Demo · 价格监控", en: "Automation Demo · Price Monitor" }, lang)}
           </span>
@@ -155,7 +158,7 @@ export default function PriceMonitor({ lang, backHref, backLabel }: { lang: Lang
           </p>
         </div>
 
-        <div className="p-6 sm:p-8">
+        <div className="pm-b p-6 sm:p-8">
           {/* 商品切换 */}
           <div className="flex flex-wrap gap-2">
             {PRODUCTS.map((p, i) => (

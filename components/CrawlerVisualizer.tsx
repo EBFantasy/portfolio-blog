@@ -198,6 +198,9 @@ export default function CrawlerVisualizer({ lang, backHref, backLabel }: { lang:
       <BackToCase href={backHref} label={backLabel} />
       <style>{`
         @keyframes cw-pulse { 0% { r: 15; opacity: .9; } 100% { r: 24; opacity: 0; } }
+        @keyframes cw-sec { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+        .cw-a { animation: cw-sec .6s ease both; }
+        .cw-b { animation: cw-sec .6s ease .15s both; }
         @keyframes cw-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
         .cw-slider { accent-color: var(--cw-acc); }
       `}</style>
@@ -206,7 +209,7 @@ export default function CrawlerVisualizer({ lang, backHref, backLabel }: { lang:
         style={{ ...vars, background: "var(--cw-bg)" }}
       >
         {/* 头部 */}
-        <div className="border-b px-6 py-8 sm:px-10" style={{ borderColor: "var(--cw-line)" }}>
+        <div className="cw-a border-b px-6 py-8 sm:px-10" style={{ borderColor: "var(--cw-line)" }}>
           <span className="rounded-full px-2.5 py-1 text-xs font-semibold" style={{ background: "rgba(52,211,153,0.12)", color: "var(--cw-acc)" }}>
             {L({ zh: "自动化 Demo · 爬虫调度", en: "Automation Demo · Crawler" }, lang)}
           </span>
@@ -224,7 +227,7 @@ export default function CrawlerVisualizer({ lang, backHref, backLabel }: { lang:
           </p>
         </div>
 
-        <div className="grid gap-5 p-6 sm:p-8 lg:grid-cols-[1.55fr_1fr]">
+        <div className="cw-b grid gap-5 p-6 sm:p-8 lg:grid-cols-[1.55fr_1fr]">
           {/* 左：站点图 */}
           <div className="overflow-hidden rounded-2xl border" style={{ borderColor: "var(--cw-line)", background: "var(--cw-panel)" }}>
             <div className="flex items-center justify-between border-b px-4 py-2.5" style={{ borderColor: "var(--cw-line)" }}>

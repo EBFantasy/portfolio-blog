@@ -34,6 +34,10 @@ export default function WorkGrid({
 
   return (
     <div>
+      <style>{`
+        @keyframes wg-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+      `}</style>
+
       {/* 分类筛选 tabs */}
       <div className="flex flex-wrap gap-2">
         {tabs.map((t) => (
@@ -54,10 +58,12 @@ export default function WorkGrid({
         ))}
       </div>
 
-      {/* 项目网格 */}
+      {/* 项目网格：切换分类时卡片交错入场（key 变化触发重放） */}
       <div className="mt-8 grid gap-5 sm:grid-cols-2">
-        {filtered.map((p) => (
-          <WorkCard key={p.slug} project={p} lang={lang} />
+        {filtered.map((p, i) => (
+          <div key={`${active}-${p.slug}`} style={{ animation: `wg-in .5s ease ${i * 70}ms both` }}>
+            <WorkCard project={p} lang={lang} />
+          </div>
         ))}
       </div>
     </div>
