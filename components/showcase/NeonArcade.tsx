@@ -422,9 +422,6 @@ function TabbedRows({ lang, store }: { lang: Lang; store: ReturnType<typeof useS
             </button>
           ))}
         </div>
-        <span className="hidden text-[11px] sm:inline" style={{ color: "var(--na-muted)", ...MONO }}>
-          {L({ zh: "按标签页切换视图", en: "SWITCH TABS" }, lang)}
-        </span>
       </div>
       <div key={row.id} className="grid gap-4 border-t p-4 sm:grid-cols-2 lg:grid-cols-4" style={{ borderColor: "var(--na-line)", background: "rgba(0,0,0,0.15)", animation: "na-in .4s ease both" }}>
         {games.map((g) => (
