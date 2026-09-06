@@ -34,7 +34,7 @@ export default async function PricingPlaygroundPage({
 
   return (
     <div className="py-14">
-      <BackToCase href={`/${lang}/work`} label={dict.work.detail.backToWork} />
+      <BackToCase href={`/${lang}/work/saas-pricing`} label={p.backToCase} />
 
       <Reveal>
         <div className="mt-6">

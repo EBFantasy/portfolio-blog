@@ -34,7 +34,7 @@ export default async function CinemaPlaygroundPage({
 
   return (
     <div className="py-14">
-      <BackToCase href={`/${lang}/work`} label={dict.work.detail.backToWork} />
+      <BackToCase href={`/${lang}/work/cinema-booking`} label={c.backToCase} />
 
       <Reveal>
         <div className="mt-6">

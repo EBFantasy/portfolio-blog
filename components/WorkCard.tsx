@@ -1,5 +1,3 @@
-"use client";
-
 import Link from "next/link";
 import { ArrowRightIcon } from "@/components/Icons";
 import { categoryMeta, type Accent, type Project } from "@/lib/work-shared";
@@ -32,7 +30,6 @@ export default function WorkCard({ project, lang }: { project: Project; lang: st
   const cat = categoryMeta[project.category][lang === "en" ? "en" : "zh"];
   const title = project.title[lang === "en" ? "en" : "zh"];
   const summary = project.summary[lang === "en" ? "en" : "zh"];
-  const tryLabel = lang === "en" ? "Try it live" : "在线试玩";
 
   return (
     <Link
@@ -75,29 +72,6 @@ export default function WorkCard({ project, lang }: { project: Project; lang: st
         <span className="absolute left-3 top-3 rounded-full bg-black/30 px-2.5 py-0.5 text-[11px] font-medium text-white backdrop-blur-sm">
           {cat}
         </span>
-        {/* 试玩角标：有可交互 demo 的作品直接可见 */}
-        {project.links?.demo && (
-          <span
-            role="button"
-            tabIndex={0}
-            aria-label={tryLabel}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              window.open(project.links!.demo, "_blank", "noopener");
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                e.stopPropagation();
-                window.open(project.links!.demo, "_blank", "noopener");
-              }
-            }}
-            className="absolute right-3 top-3 inline-flex cursor-pointer items-center gap-1 rounded-full bg-black/35 px-2.5 py-1 text-[11px] font-semibold text-white backdrop-blur-sm transition hover:bg-emerald-600"
-          >
-            ▶ {tryLabel}
-          </span>
-        )}
       </div>
 
       <div className="flex flex-1 flex-col p-5">
@@ -118,34 +92,10 @@ export default function WorkCard({ project, lang }: { project: Project; lang: st
             </span>
           ))}
         </div>
-        <div className="mt-4 flex items-center justify-between">
-          <span className="inline-flex items-center gap-1 text-sm font-medium text-zinc-700 transition group-hover:text-zinc-900 dark:text-zinc-300 dark:group-hover:text-zinc-100">
-            {lang === "en" ? "View case" : "查看案例"}
-            <ArrowRightIcon />
-          </span>
-          {project.links?.demo && (
-            <span
-              role="button"
-              tabIndex={0}
-              aria-label={tryLabel}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                window.open(project.links!.demo, "_blank", "noopener");
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  window.open(project.links!.demo, "_blank", "noopener");
-                }
-              }}
-              className="inline-flex cursor-pointer items-center gap-1 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-emerald-500 active:scale-95"
-            >
-              ▶ {tryLabel}
-            </span>
-          )}
-        </div>
+        <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-zinc-700 transition group-hover:text-zinc-900 dark:text-zinc-300 dark:group-hover:text-zinc-100">
+          {lang === "en" ? "View case" : "查看案例"}
+          <ArrowRightIcon />
+        </span>
       </div>
     </Link>
   );
