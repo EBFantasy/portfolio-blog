@@ -3,9 +3,9 @@ import "server-only";
 import type { Project } from "@/lib/work-shared";
 
 /**
- * 作品区可见列表：自动化×3（新方向）+ 官网 + 小程序。
- * 电影选座与订阅计费已完成并替换为自动化方向，不再出现在作品卡片里，
- * 但它们的内容页（详情页）保留且可从各自 playground 的返回按钮进入。
+ * 作品区可见列表：自动化×3 + 功能演示×2 + 小程序×1，共 6 个。
+ * 极光电商官网已随网页 Demo 方向一并移除，不再出现在作品卡片里；
+ * 电影选座与订阅计费的内容页（详情页）保留且可从各自 playground 的返回按钮进入。
  */
 export const projects: Project[] = [
   {
@@ -107,39 +107,6 @@ export const projects: Project[] = [
       { zh: "一键下载真实 CSV 文件", en: "One-click real CSV download" },
     ],
     links: { demo: "/playground/pipeline" },
-  },
-  {
-    slug: "aurora-commerce",
-    category: "web",
-    preview: "browser",
-    accent: "violet",
-    featured: true,
-    year: "2026",
-    tags: ["Next.js", "GSAP", "Tailwind CSS", "动效设计"],
-    title: {
-      zh: "极光 · 电商品牌官网",
-      en: "Aurora · E-commerce Brand Site",
-    },
-    summary: {
-      zh: "带完整滚动动效与视差层的品牌营销官网，首屏加载即呈现产品叙事。",
-      en: "A brand marketing site with full scroll-driven animations and parallax layers, telling the product story from the first screen.",
-    },
-    description: [
-      {
-        zh: "这是给一家家居生活品牌做的官网 Demo。整站以「光」为视觉主线：首屏用 Canvas 粒子模拟极光流动，向下滚动时产品卡片按时间线依次浮入，配合 sticky 分屏叙事把卖点逐段展开。",
-        en: "A homepage demo built for a home-living brand. The visual theme is \"light\": the hero uses a Canvas particle field simulating an aurora, and as you scroll, product cards float in on a timeline while sticky split-screens expand each selling point.",
-      },
-      {
-        zh: "技术上采用 Next.js App Router 服务端渲染保证首屏速度，动效层用 GSAP ScrollTrigger 编排，所有动画尊重系统 prefers-reduced-motion 设置；图片走 next/image 懒加载 + AVIF 格式，Lighthouse 移动端性能 90+。",
-        en: "Technically it uses the Next.js App Router for SSR-first performance, GSAP ScrollTrigger for choreography, and every animation respects prefers-reduced-motion. Images go through next/image lazy loading in AVIF, scoring 90+ on mobile Lighthouse.",
-      },
-    ],
-    features: [
-      { zh: "Canvas 粒子极光首屏，随鼠标视差偏移", en: "Canvas aurora hero with mouse parallax" },
-      { zh: "滚动时间线叙事，产品逐段浮入", en: "Scroll timeline with staggered product reveals" },
-      { zh: "明暗双主题，跟随系统自动切换", en: "Light/dark themes that follow the system" },
-      { zh: "移动端 Lighthouse 性能 90+", en: "90+ mobile Lighthouse performance" },
-    ],
   },
   {
     slug: "teatime-ordering",

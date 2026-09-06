@@ -112,7 +112,7 @@ const zh = {
   },
   work: {
     title: "作品集",
-    desc: "网页 Demo、小程序预览与功能演示。案例详情页附完整实现拆解。",
+    desc: "自动化脚本、小程序预览与功能演示。案例详情页附完整实现拆解。",
     empty: "第一批作品正在制作中，很快上线。",
     catAll: "全部",
     featuredWork: "精选作品",
@@ -395,7 +395,7 @@ const en: typeof zh = {
   },
   work: {
     title: "Work",
-    desc: "Web demos, mini program previews and feature playgrounds. Each case comes with a full implementation breakdown.",
+    desc: "Automation scripts, mini program previews and feature playgrounds. Each case comes with a full implementation breakdown.",
     empty: "The first batch of projects is in production, coming soon.",
     catAll: "All",
     featuredWork: "Featured Work",

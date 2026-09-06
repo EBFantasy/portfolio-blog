@@ -1,6 +1,6 @@
 /** work 板块共享类型与分类元数据（服务端/客户端均可导入） */
 
-export type ProjectCategory = "web" | "miniprogram" | "playground" | "automation";
+export type ProjectCategory = "miniprogram" | "playground" | "automation";
 export type Accent = "violet" | "amber" | "rose" | "sky";
 
 export type BilingualText = { zh: string; en: string };
@@ -23,13 +23,12 @@ export interface Project {
 }
 
 export const categoryMeta: Record<ProjectCategory, BilingualText> = {
-  web: { zh: "网页 Demo", en: "Web Demo" },
   miniprogram: { zh: "小程序", en: "Mini Program" },
   playground: { zh: "功能演示", en: "Playground" },
   automation: { zh: "自动化 / 数据", en: "Automation & Data" },
 };
 
-export const projectCategories: ProjectCategory[] = ["automation", "web", "miniprogram", "playground"];
+export const projectCategories: ProjectCategory[] = ["automation", "miniprogram", "playground"];
 
 export function getCategoryMeta(c: ProjectCategory): BilingualText {
   return categoryMeta[c];
