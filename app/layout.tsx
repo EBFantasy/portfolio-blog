@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://ebfantasy.vercel.app"),
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "EBFantasy · 软件工程师作品集与博客",
     template: "%s · EBFantasy",
