@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { locales, isValidLocale, getDict } from "@/lib/i18n";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import FloatingMascot from "@/components/FloatingMascot";
 
 export function generateStaticParams() {
   return locales.map((lang) => ({ lang }));
@@ -23,6 +24,11 @@ export default async function LangLayout({
       <main className="mx-auto w-full max-w-5xl flex-1 px-5 sm:px-8">
         {children}
       </main>
+      <FloatingMascot
+        quotes={dict.mascot.quotes}
+        toggleShow={dict.mascot.toggleShow}
+        toggleHide={dict.mascot.toggleHide}
+      />
       <Footer lang={lang} dict={dict} />
     </div>
   );

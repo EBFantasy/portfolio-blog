@@ -11,6 +11,18 @@ export function isValidLocale(v: string): v is Locale {
 const zh = {
   siteName: "EBFantasy",
   siteTagline: "软件工程师 · Web 与小程序开发",
+  mascot: {
+    toggleShow: "唤醒看板娘",
+    toggleHide: "折叠看板娘",
+    quotes: [
+      "今天写了多少行代码？",
+      "Bug 已经被斩杀！",
+      "欢迎光临 EBFantasy 的作品空间~",
+      "左侧常驻巡逻中...",
+      "点击我可以打个招呼哦！",
+      "这里有很多亲手做的好玩 Demo~"
+    ],
+  },
   nav: {
     home: "首页",
     work: "作品",
@@ -300,6 +312,18 @@ const zh = {
 const en: typeof zh = {
   siteName: "EBFantasy",
   siteTagline: "Software Engineer · Web & Mini Program Development",
+  mascot: {
+    toggleShow: "Summon Mascot",
+    toggleHide: "Fold Mascot",
+    quotes: [
+      "How many lines coded today?",
+      "Bugs have been slashed!",
+      "Welcome to EBFantasy's portfolio~",
+      "Patrolling the left edge...",
+      "Click me to say hi!",
+      "Check out the interactive demos here~"
+    ],
+  },
   nav: {
     home: "Home",
     work: "Work",

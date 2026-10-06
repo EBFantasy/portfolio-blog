@@ -2,7 +2,6 @@ import Link from "next/link";
 import { ArrowRightIcon } from "@/components/Icons";
 import WorkCard from "@/components/WorkCard";
 import { Reveal } from "@/components/showcase/reveal";
-import BladeAvatar from "@/components/home/BladeAvatar";
 import HeroSlashCta from "@/components/home/HeroSlashCta";
 import { getDict, isValidLocale, type Locale } from "@/lib/i18n";
 import { getPostsByLang } from "@/lib/blog";
@@ -43,55 +42,44 @@ export default async function HomePage({
           }}
         />
 
-        <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,460px)]">
-          <div>
-            <Reveal>
-              <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
-                <span className="relative flex h-1.5 w-1.5">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-60" />
-                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                </span>
-                {dict.home.heroBadge}
-              </p>
-              <h1 className="max-w-2xl text-4xl font-semibold tracking-tight text-zinc-900 sm:text-5xl dark:text-zinc-50">
-                {dict.home.heroTitle}
-              </h1>
-              <p className="mt-5 max-w-xl text-base leading-relaxed text-zinc-500 dark:text-zinc-400">
-                {dict.home.heroDesc}
-              </p>
-            </Reveal>
-            <Reveal delay={200}>
-              <div className="mt-8 flex flex-wrap gap-3">
-                <HeroSlashCta href={`/${lang}/work`}>{dict.home.viewWork}</HeroSlashCta>
-                <Link
-                  href={`/${lang}/blog`}
-                  className="inline-flex items-center rounded-xl border border-zinc-300 px-5 py-2.5 text-sm font-medium text-zinc-700 transition hover:border-zinc-400 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:border-zinc-500 dark:hover:bg-zinc-800/50"
-                >
-                  {dict.home.readBlog}
-                </Link>
-                <Link
-                  href={`/${lang}/services`}
-                  className="inline-flex items-center rounded-xl px-5 py-2.5 text-sm font-medium text-emerald-700 transition hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/40"
-                >
-                  {dict.home.getQuote} &rarr;
-                </Link>
-              </div>
-            </Reveal>
-            <Reveal delay={320}>
-              <div className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-3 text-sm">
-                <Stat value="6" label={dict.home.statProjects} />
-                <Stat value="3" label={dict.home.statAutomation} />
-                <Stat value="6" label={dict.home.statTemplates} />
-              </div>
-            </Reveal>
-          </div>
-
-          <Reveal delay={140} dir="right" className="relative">
-            <div className="pointer-events-auto">
-              <BladeAvatar
-                counterLabel={dict.home.heroSlashLabel}
-                hint={dict.home.heroSlashHint}
-              />
+        <div className="max-w-3xl">
+          <Reveal>
+            <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-60" />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
+              </span>
+              {dict.home.heroBadge}
+            </p>
+            <h1 className="text-4xl font-semibold tracking-tight text-zinc-900 sm:text-5xl lg:text-6xl dark:text-zinc-50">
+              {dict.home.heroTitle}
+            </h1>
+            <p className="mt-5 max-w-2xl text-base leading-relaxed text-zinc-500 sm:text-lg dark:text-zinc-400">
+              {dict.home.heroDesc}
+            </p>
+          </Reveal>
+          <Reveal delay={200}>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <HeroSlashCta href={`/${lang}/work`}>{dict.home.viewWork}</HeroSlashCta>
+              <Link
+                href={`/${lang}/blog`}
+                className="inline-flex items-center rounded-xl border border-zinc-300 px-5 py-2.5 text-sm font-medium text-zinc-700 transition hover:border-zinc-400 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:border-zinc-500 dark:hover:bg-zinc-800/50"
+              >
+                {dict.home.readBlog}
+              </Link>
+              <Link
+                href={`/${lang}/services`}
+                className="inline-flex items-center rounded-xl px-5 py-2.5 text-sm font-medium text-emerald-700 transition hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/40"
+              >
+                {dict.home.getQuote} &rarr;
+              </Link>
+            </div>
+          </Reveal>
+          <Reveal delay={320}>
+            <div className="mt-12 flex flex-wrap items-center gap-x-10 gap-y-4 text-sm border-t border-zinc-200/80 pt-8 dark:border-zinc-800/80">
+              <Stat value="6" label={dict.home.statProjects} />
+              <Stat value="3" label={dict.home.statAutomation} />
+              <Stat value="6" label={dict.home.statTemplates} />
             </div>
           </Reveal>
         </div>
