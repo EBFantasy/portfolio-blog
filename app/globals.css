@@ -1,8 +1,29 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+/**
+ * 品牌主色：琥珀金。
+ * 取自站点 OC 的原生配色（白银发 / 琥珀金瞳 / 墨黑裙 + 白色荷叶边上衣），
+ * 用琥珀而非柠檬黄，是因为黄色在白底上对比度不足，琥珀压深后可读性更好。
+ *
+ * Tailwind v4 的色阶由 CSS 变量驱动，因此这里覆盖 emerald-* 变量即可让
+ * 全站既有的 emerald 类名整体转为琥珀金，无需改动任何组件。
+ * 映射保持原有明度语义：50 最浅 → 950 最深。
+ */
 @theme {
   --animate-pop: pop 0.35s ease-out;
+
+  --color-emerald-50: #fffbeb;
+  --color-emerald-100: #fef3c7;
+  --color-emerald-200: #fde68a;
+  --color-emerald-300: #f7cd6b;
+  --color-emerald-400: #f0b03c;
+  --color-emerald-500: #e0900c;
+  --color-emerald-600: #c2740a;
+  --color-emerald-700: #a15a0b;
+  --color-emerald-800: #7f470e;
+  --color-emerald-900: #673c10;
+  --color-emerald-950: #3d2008;
 }
 
 @custom-variant dark (&:where(.dark, .dark *));
@@ -30,13 +51,13 @@ html.dark body {
 }
 
 ::selection {
-  background-color: #a7f3d0;
+  background-color: #fde68a;
   color: #18181b;
 }
 
 html.dark ::selection {
-  background-color: #065f46;
-  color: #ecfdf5;
+  background-color: #7f470e;
+  color: #fffbeb;
 }
 
 .prose pre {
