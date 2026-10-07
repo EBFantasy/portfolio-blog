@@ -159,11 +159,11 @@ export default function FloatingMascot({ quotes, toggleShow, toggleHide }: Masco
         </button>
       )}
 
-      {/* 展开状态：贴在屏幕左侧边缘 */}
+      {/* 展开状态：贴屏幕左缘 + 浏览器底缘 */}
       {visible && (
         <div
           ref={mascotRef}
-          className="fixed left-0 bottom-12 z-40 select-none"
+          className="fixed left-0 bottom-0 z-40 select-none"
         >
           {/* 对话气泡 */}
           {quote && (
