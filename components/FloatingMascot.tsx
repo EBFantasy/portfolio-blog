@@ -4,14 +4,13 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import Image from "next/image";
 
 /**
- * 屏幕左侧随动 Q 版看板娘（Web 2.5D 切件 Live2D 看板娘组件）
+ * 屏幕左侧随动 Q 版看板娘（Web 2.5D 切件 Live2D 看板娘组件 v2）
  *
- * 核心技术架构：
- * 1. 【底图层】：无瞳孔的眼白底面、身体、衣服、发丝与发饰
- * 2. 【瞳孔层】：左眼与右眼独立切件，平滑跟随鼠标在眼眶内绝对位移（限制在眼白内防穿模）
- * 3. 【手部层】：独立趴框手部切件，平时静止扣住左边缘；点击/CTA互动时触发弹性抬手招手动画
- * 4. 【眨眼/呼吸微动】：眼皮定时开合眨眼，全身极轻微起伏
- * 5. 【折叠/收起】：随时可收拢进左边缘徽章，状态记忆在 localStorage
+ * 层序（Z 从低到高）：
+ *   base2(底图,眼孔填平眼白) < iris_l/r(整眼孔虹膜件,随光标位移) < hand2(搭框手)
+ *   < wristoverlay(腕部发丝盖片) < eyeoverlay(睁眼睫毛环) < lid_l/r(闭眼件,仅眨眼时显示)
+ * 眨眼 = 隐藏 overlay+iris、显示 lids（qwen-image-2.1 重绘的自然闭眼件）。
+ * 招手 = 手部件绕腕枢轴 (94%,50%) 旋转，wristoverlay 盖住关节防断肢。
  */
 
 interface MascotProps {
@@ -19,6 +18,17 @@ interface MascotProps {
   toggleShow: string;
   toggleHide: string;
 }
+
+/* 部件几何：canvas 700x997 的百分比（源自 _tmp_mascot/parts_report.json） */
+const GEO = {
+  irisL: { left: "17.00%", top: "40.02%", width: "13.00%", height: "8.22%" },
+  irisR: { left: "43.43%", top: "50.25%", width: "13.14%", height: "7.22%" },
+  hand: { left: "0%", top: "48.85%", width: "7.71%", height: "10.33%" },
+  wrist: { left: "0%", top: "51.86%", width: "9.86%", height: "9.53%" },
+  overlay: { left: "16.43%", top: "39.62%", width: "40.86%", height: "18.25%" },
+  lidL: { left: "13.86%", top: "34.80%", width: "20.86%", height: "13.94%" },
+  lidR: { left: "41.71%", top: "44.33%", width: "21.00%", height: "17.35%" },
+};
 
 export default function FloatingMascot({ quotes, toggleShow, toggleHide }: MascotProps) {
   const [visible, setVisible] = useState(true);
@@ -51,14 +61,13 @@ export default function FloatingMascot({ quotes, toggleShow, toggleHide }: Masco
     }
   };
 
-  // 1. 眼睛注视光标跟踪（计算瞳孔在眼眶内的偏移）
+  // 1. 眼睛注视光标跟踪（虹膜在眼眶内位移，overlay 睫毛环在上层裁边）
   useEffect(() => {
     if (!visible) return;
 
     const handleMouseMove = (e: MouseEvent) => {
       if (!mascotRef.current) return;
       const rect = mascotRef.current.getBoundingClientRect();
-      // 看板娘眼部在屏幕上的大致视线中心
       const eyeCenterX = rect.left + rect.width * 0.4;
       const eyeCenterY = rect.top + rect.height * 0.45;
 
@@ -66,7 +75,6 @@ export default function FloatingMascot({ quotes, toggleShow, toggleHide }: Masco
       const deltaY = e.clientY - eyeCenterY;
       const dist = Math.hypot(deltaX, deltaY);
 
-      // 最大位移限制在 ±5px 内，避免眼球离开眼眶
       const maxOffset = 5.5;
       const factor = dist > 0 ? Math.min(dist / 350, 1) : 0;
       const angle = Math.atan2(deltaY, deltaX);
@@ -76,7 +84,6 @@ export default function FloatingMascot({ quotes, toggleShow, toggleHide }: Masco
         y: Math.sin(angle) * maxOffset * factor,
       });
 
-      // 整体极微幅的角度倾斜 (±2.5deg)
       const windowH = window.innerHeight;
       const normY = (e.clientY / windowH) * 2 - 1;
       setTilt(normY * 2.2);
@@ -86,7 +93,7 @@ export default function FloatingMascot({ quotes, toggleShow, toggleHide }: Masco
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, [visible]);
 
-  // 2. 自然眨眼动画循环（每 4~6 秒眨眼一次）
+  // 2. 自然眨眼循环（每 4~6 秒一次，闭眼 160ms）
   useEffect(() => {
     if (!visible) return;
     let blinkTimer: NodeJS.Timeout;
@@ -101,13 +108,11 @@ export default function FloatingMascot({ quotes, toggleShow, toggleHide }: Masco
     return () => clearTimeout(blinkTimer);
   }, [visible]);
 
-  // 3. 点击触发互动（小手挥手打招呼 + 微笑 + 气泡台词）
+  // 3. 点击触发互动（招手 + 气泡台词）
   const handleClick = useCallback(() => {
-    // 触发招手动画
     setWaving(true);
     setTimeout(() => setWaving(false), 1400);
 
-    // 随机台词气泡
     if (quotes && quotes.length > 0) {
       const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
       setQuote(randomQuote);
@@ -119,7 +124,7 @@ export default function FloatingMascot({ quotes, toggleShow, toggleHide }: Masco
     }
   }, [quotes]);
 
-  // 4. 监听 Hero CTA 联动事件（悬停“查看作品”也招手打招呼）
+  // 4. Hero CTA 联动
   useEffect(() => {
     const handleHeroSlash = () => {
       if (!visible) return;
@@ -129,6 +134,9 @@ export default function FloatingMascot({ quotes, toggleShow, toggleHide }: Masco
     window.addEventListener("hero:slash", handleHeroSlash);
     return () => window.removeEventListener("hero:slash", handleHeroSlash);
   }, [visible, handleClick]);
+
+  const openEyeOpacity = blinking ? 0 : 1;
+  const lidOpacity = blinking ? 1 : 0;
 
   return (
     <>
@@ -147,7 +155,6 @@ export default function FloatingMascot({ quotes, toggleShow, toggleHide }: Masco
           100% { transform: rotate(0deg); }
         }
         .mascot-waving-hand {
-          transform-origin: 30% 92%;
           animation: hand-wave 1.35s cubic-bezier(0.36, 0.07, 0.19, 0.97) forwards;
         }
       `}</style>
@@ -206,13 +213,11 @@ export default function FloatingMascot({ quotes, toggleShow, toggleHide }: Masco
             className="relative flex cursor-pointer items-end transition-transform duration-200 hover:scale-[1.02]"
             style={{ animation: "mascot-breathe 4.5s ease-in-out infinite" }}
           >
-            {/* 角色整体尺寸包裹器 */}
             <div className="relative -ml-2.5 w-36 sm:w-44 md:w-48 aspect-[700/997] filter drop-shadow-[0_8px_20px_rgba(224,144,12,0.18)] dark:drop-shadow-[0_8px_24px_rgba(224,144,12,0.14)]">
-              
-              {/* 1. 【底图层】：无瞳孔眼白基底 + 身体头发 (Z: 1) */}
+              {/* Z1 底图：眼孔填平眼白 + 身体头发 */}
               <div className="absolute inset-0 z-10">
                 <Image
-                  src="/oc_base_sclera.png"
+                  src="/oc_base2.png"
                   alt="Silver-haired mascot base"
                   fill
                   priority
@@ -220,78 +225,64 @@ export default function FloatingMascot({ quotes, toggleShow, toggleHide }: Masco
                 />
               </div>
 
-              {/* 2. 【瞳孔层】：左眼琥珀金眼球切件 (Z: 2) */}
-              {/* 基准位置: X=17.14%, Y=40.12%, W=13.57%, H=9.53% */}
+              {/* Z2 虹膜件：随光标位移（眨眼时隐藏） */}
               <div
-                className="absolute z-20 pointer-events-none transition-transform duration-75 ease-out"
+                className="absolute z-20 pointer-events-none"
                 style={{
-                  left: "17.14%",
-                  top: "40.12%",
-                  width: "13.57%",
-                  height: "9.53%",
-                  transform: `translate(${eyeOffset.x}px, ${eyeOffset.y}px) ${
-                    blinking ? "scaleY(0.08)" : "scaleY(1)"
-                  }`,
-                  transformOrigin: "center center",
-                  transition: blinking
-                    ? "transform 0.08s ease-in-out"
-                    : "transform 0.12s ease-out",
+                  ...GEO.irisL,
+                  opacity: openEyeOpacity,
+                  transform: `translate(${eyeOffset.x}px, ${eyeOffset.y}px)`,
+                  transition: "transform 0.12s ease-out, opacity 0.07s linear",
                 }}
               >
-                <Image
-                  src="/oc_pupil_l.png"
-                  alt="Left eye pupil"
-                  fill
-                  className="object-contain"
-                />
+                <Image src="/oc_iris_l.png" alt="" fill className="object-contain" />
               </div>
-
-              {/* 3. 【瞳孔层】：右眼琥珀金眼球切件 (Z: 2) */}
-              {/* 基准位置: X=40.0%, Y=49.15%, W=15.0%, H=9.53% */}
               <div
-                className="absolute z-20 pointer-events-none transition-transform duration-75 ease-out"
+                className="absolute z-20 pointer-events-none"
                 style={{
-                  left: "40.0%",
-                  top: "49.15%",
-                  width: "15.0%",
-                  height: "9.53%",
-                  transform: `translate(${eyeOffset.x}px, ${eyeOffset.y}px) ${
-                    blinking ? "scaleY(0.08)" : "scaleY(1)"
-                  }`,
-                  transformOrigin: "center center",
-                  transition: blinking
-                    ? "transform 0.08s ease-in-out"
-                    : "transform 0.12s ease-out",
+                  ...GEO.irisR,
+                  opacity: openEyeOpacity,
+                  transform: `translate(${eyeOffset.x}px, ${eyeOffset.y}px)`,
+                  transition: "transform 0.12s ease-out, opacity 0.07s linear",
                 }}
               >
-                <Image
-                  src="/oc_pupil_r.png"
-                  alt="Right eye pupil"
-                  fill
-                  className="object-contain"
-                />
+                <Image src="/oc_iris_r.png" alt="" fill className="object-contain" />
               </div>
 
-              {/* 4. 【小手层】：独立搭在边框上的小手 (Z: 30) */}
-              {/* 基准位置: X=0%, Y=46.14%, W=10.71%, H=14.04% */}
+              {/* Z3 搭框手：点击绕腕枢轴招手 */}
               <div
                 className={`absolute z-30 pointer-events-none ${waving ? "mascot-waving-hand" : ""}`}
-                style={{
-                  left: "0%",
-                  top: "46.14%",
-                  width: "10.71%",
-                  height: "14.04%",
-                  transformOrigin: "20% 90%",
-                }}
+                style={{ ...GEO.hand, transformOrigin: "94% 50%" }}
               >
-                <Image
-                  src="/oc_hand.png"
-                  alt="Mascot hand"
-                  fill
-                  className="object-contain"
-                />
+                <Image src="/oc_hand2.png" alt="Mascot hand" fill className="object-contain" />
               </div>
 
+              {/* Z4 腕部发丝盖片：盖住手腕关节 */}
+              <div className="absolute z-40 pointer-events-none" style={GEO.wrist}>
+                <Image src="/oc_wristoverlay.png" alt="" fill className="object-contain" />
+              </div>
+
+              {/* Z5 睁眼睫毛环（眨眼时隐藏） */}
+              <div
+                className="absolute z-50 pointer-events-none"
+                style={{ ...GEO.overlay, opacity: openEyeOpacity, transition: "opacity 0.07s linear" }}
+              >
+                <Image src="/oc_eyeoverlay.png" alt="" fill className="object-contain" />
+              </div>
+
+              {/* Z6 闭眼件（仅眨眼时显示） */}
+              <div
+                className="absolute z-60 pointer-events-none"
+                style={{ ...GEO.lidL, opacity: lidOpacity, transition: "opacity 0.07s linear" }}
+              >
+                <Image src="/oc_lid_l.png" alt="" fill className="object-contain" />
+              </div>
+              <div
+                className="absolute z-60 pointer-events-none"
+                style={{ ...GEO.lidR, opacity: lidOpacity, transition: "opacity 0.07s linear" }}
+              >
+                <Image src="/oc_lid_r.png" alt="" fill className="object-contain" />
+              </div>
             </div>
           </div>
         </div>
