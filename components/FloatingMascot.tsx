@@ -4,14 +4,14 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import Image from "next/image";
 
 /**
- * 屏幕左侧 Q 版看板娘（Web 2.5D 切件看板娘组件 v4）
+ * 屏幕左侧 Q 版看板娘（Web 2.5D 切件看板娘组件 v5 / PSD 手扣分层版）
  *
- * 层序（Z 从低到高）：
- *   base2(底图,眼球像素填平眼白+完整手指) < iris_l/r(眼球件,随光标位移,
- *   经眼孔遮罩裁切永远出不了眼眶) < lash(睁眼睫毛环,眨眼时隐藏)
- *   < lid_l/r(闭眼件,仅眨眼时显示) < eyestatic(眉毛+白发静止件,永远最上层)
- * 眨眼 = 隐藏 iris+lash、显示 lids；眉毛/白发由 static 层恒定保住。
- * 立绘本体不随动，仅眼睛注视光标；点击只弹台词气泡（不摆手）。
+ * 层序（Z 从低到高，眨眼态只换 lid 对）：
+ *   base2(挖空眼区的完整底图,眉/发/手零损失)
+ *   < wall_l/r(眼白+眼角内壁,随眼睛开合) < iris_l/r(眼球,随光标位移,被
+ *   socket 遮罩裁在眼眶内) < lash_l/r(睫毛线框) < lid_l/r(闭眼件,仅眨眼显示)
+ * 部件全部来自用户 PSD 手扣图层（psd_to_parts.py 收割），像素级原图一致。
+ * 立绘本体不随动，仅眼睛注视光标；点击只弹台词气泡。底边贴浏览器下缘。
  */
 
 interface MascotProps {
@@ -20,17 +20,28 @@ interface MascotProps {
   toggleHide: string;
 }
 
-/* 部件几何：canvas 700x997 的百分比（源自 _tmp_mascot/parts_report.json v5.1） */
+/* 部件几何：canvas 700x997 的百分比（源自 _tmp_mascot/parts_report.json v5-PSD） */
 const GEO = {
-  irisL: { left: "16.43%", top: "39.62%", width: "13.71%", height: "8.63%" },
-  irisR: { left: "43.43%", top: "49.85%", width: "13.71%", height: "7.62%" },
-  lash: { left: "11.86%", top: "34.90%", width: "50.71%", height: "25.08%" },
-  static: { left: "11.86%", top: "34.90%", width: "50.71%", height: "26.68%" },
-  lidL: { left: "11.71%", top: "34.80%", width: "20.71%", height: "13.94%" },
-  lidR: { left: "42.86%", top: "44.33%", width: "19.86%", height: "15.95%" },
+  wallL: { left: "17.14%", top: "39.82%", width: "12.57%", height: "8.32%" },
+  wallR: { left: "43.29%", top: "50.15%", width: "14.00%", height: "7.12%" },
+  irisL: { left: "19.00%", top: "39.92%", width: "9.57%", height: "8.02%" },
+  irisR: { left: "43.43%", top: "50.15%", width: "10.43%", height: "6.52%" },
+  lashL: { left: "14.43%", top: "37.21%", width: "17.29%", height: "7.72%" },
+  lashR: { left: "44.86%", top: "48.95%", width: "17.14%", height: "7.32%" },
+  lidL: { left: "14.14%", top: "36.91%", width: "17.86%", height: "11.43%" },
+  lidR: { left: "43.00%", top: "48.65%", width: "19.29%", height: "8.83%" },
+  // socket 遮罩窗口（固定不随眼球移动）：iris bbox 四周外扩 12px
+  sockWinL: { left: "17.29%", top: "38.72%", width: "13.00%", height: "10.43%" },
+  sockWinR: { left: "41.71%", top: "48.95%", width: "13.86%", height: "8.93%" },
 };
 
-/* 眼孔遮罩：虹膜位移后被裁切在眼眶内，绝不越界压到睫毛线 */
+/* iris 相对 socket 窗口原点的静止偏移与尺寸（实测换算） */
+const IRIS_IN_SOCK = {
+  l: { left: "13.19%", top: "11.54%", width: "73.63%", height: "76.92%" },
+  r: { left: "12.37%", top: "13.48%", width: "75.26%", height: "73.03%" },
+};
+
+/* 眼眶裁切遮罩：眼球位移后仍被裁在眼眶内（用户手扣 eyesocket 轮廓） */
 const SOCKET_MASK = {
   l: "url(/oc_socket_l.png)",
   r: "url(/oc_socket_r.png)",
@@ -195,7 +206,7 @@ export default function FloatingMascot({ quotes, toggleShow, toggleHide }: Masco
             style={{ animation: "mascot-breathe 4.5s ease-in-out infinite" }}
           >
             <div className="relative -ml-2.5 w-36 sm:w-44 md:w-48 aspect-[700/997] filter drop-shadow-[0_8px_20px_rgba(224,144,12,0.18)] dark:drop-shadow-[0_8px_24px_rgba(224,144,12,0.14)]">
-              {/* Z10 底图：眼球像素填平眼白 + 身体头发手指 */}
+              {/* Z10 底图：眼区挖空（周边皮肤回填）+ 眉毛白发手指完整 */}
               <div className="absolute inset-0 z-10">
                 <Image
                   src="/oc_base2.png"
@@ -206,11 +217,25 @@ export default function FloatingMascot({ quotes, toggleShow, toggleHide }: Masco
                 />
               </div>
 
-              {/* Z20 眼球件：外层固定+眼孔遮罩裁切，内层随光标位移（眨眼时隐藏） */}
+              {/* Z15 眼白内壁 wall：眼球下层补底（眨眼时隐藏） */}
+              <div
+                className="absolute z-[15] pointer-events-none"
+                style={{ ...GEO.wallL, opacity: openEyeOpacity, transition: "opacity 0.07s linear" }}
+              >
+                <Image src="/oc_wall_l.png" alt="" fill className="object-contain" />
+              </div>
+              <div
+                className="absolute z-[15] pointer-events-none"
+                style={{ ...GEO.wallR, opacity: openEyeOpacity, transition: "opacity 0.07s linear" }}
+              >
+                <Image src="/oc_wall_r.png" alt="" fill className="object-contain" />
+              </div>
+
+              {/* Z20 眼球：socket 遮罩窗口固定，窗口内 iris 随光标位移（眨眼隐藏） */}
               <div
                 className="absolute z-20 pointer-events-none"
                 style={{
-                  ...GEO.irisL,
+                  ...GEO.sockWinL,
                   opacity: openEyeOpacity,
                   WebkitMaskImage: SOCKET_MASK.l,
                   maskImage: SOCKET_MASK.l,
@@ -220,8 +245,9 @@ export default function FloatingMascot({ quotes, toggleShow, toggleHide }: Masco
                 }}
               >
                 <div
-                  className="absolute inset-0"
+                  className="absolute"
                   style={{
+                    ...IRIS_IN_SOCK.l,
                     transform: `translate(${eyeOffset.x}px, ${eyeOffset.y}px)`,
                     transition: "transform 0.12s ease-out",
                   }}
@@ -232,7 +258,7 @@ export default function FloatingMascot({ quotes, toggleShow, toggleHide }: Masco
               <div
                 className="absolute z-20 pointer-events-none"
                 style={{
-                  ...GEO.irisR,
+                  ...GEO.sockWinR,
                   opacity: openEyeOpacity,
                   WebkitMaskImage: SOCKET_MASK.r,
                   maskImage: SOCKET_MASK.r,
@@ -242,8 +268,9 @@ export default function FloatingMascot({ quotes, toggleShow, toggleHide }: Masco
                 }}
               >
                 <div
-                  className="absolute inset-0"
+                  className="absolute"
                   style={{
+                    ...IRIS_IN_SOCK.r,
                     transform: `translate(${eyeOffset.x}px, ${eyeOffset.y}px)`,
                     transition: "transform 0.12s ease-out",
                   }}
@@ -252,15 +279,21 @@ export default function FloatingMascot({ quotes, toggleShow, toggleHide }: Masco
                 </div>
               </div>
 
-              {/* Z30 睁眼睫毛环（眨眼时隐藏） */}
+              {/* Z30 睫毛线框 lash：左右眼独立（眨眼隐藏） */}
               <div
                 className="absolute z-30 pointer-events-none"
-                style={{ ...GEO.lash, opacity: openEyeOpacity, transition: "opacity 0.07s linear" }}
+                style={{ ...GEO.lashL, opacity: openEyeOpacity, transition: "opacity 0.07s linear" }}
               >
-                <Image src="/oc_lash.png" alt="" fill className="object-contain" />
+                <Image src="/oc_lash_l.png" alt="" fill className="object-contain" />
+              </div>
+              <div
+                className="absolute z-30 pointer-events-none"
+                style={{ ...GEO.lashR, opacity: openEyeOpacity, transition: "opacity 0.07s linear" }}
+              >
+                <Image src="/oc_lash_r.png" alt="" fill className="object-contain" />
               </div>
 
-              {/* Z40 闭眼件（仅眨眼时显示） */}
+              {/* Z40 闭眼件（仅眨眼显示；覆盖眼白+眼球+睫毛线区） */}
               <div
                 className="absolute z-40 pointer-events-none"
                 style={{ ...GEO.lidL, opacity: lidOpacity, transition: "opacity 0.07s linear" }}
@@ -272,11 +305,6 @@ export default function FloatingMascot({ quotes, toggleShow, toggleHide }: Masco
                 style={{ ...GEO.lidR, opacity: lidOpacity, transition: "opacity 0.07s linear" }}
               >
                 <Image src="/oc_lid_r.png" alt="" fill className="object-contain" />
-              </div>
-
-              {/* Z50 静止件：眉毛+白发（永远最上层，眨眼不闪失） */}
-              <div className="absolute z-50 pointer-events-none" style={GEO.static}>
-                <Image src="/oc_eyestatic.png" alt="" fill className="object-contain" />
               </div>
             </div>
           </div>
