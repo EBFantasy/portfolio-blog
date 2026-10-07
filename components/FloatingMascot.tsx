@@ -4,12 +4,13 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import Image from "next/image";
 
 /**
- * 屏幕左侧 Q 版看板娘（Web 2.5D 切件看板娘组件 v3）
+ * 屏幕左侧 Q 版看板娘（Web 2.5D 切件看板娘组件 v4）
  *
  * 层序（Z 从低到高）：
- *   base2(底图,眼孔填平眼白+完整手指) < iris_l/r(整眼孔虹膜件,随光标位移,
- *   经眼孔遮罩裁切永远出不了眼眶) < eyeoverlay(睁眼睫毛环) < lid_l/r(闭眼件,仅眨眼时显示)
- * 眨眼 = 隐藏 overlay+iris、显示 lids（qwen-image-2.1 重绘的自然闭眼件）。
+ *   base2(底图,眼球像素填平眼白+完整手指) < iris_l/r(眼球件,随光标位移,
+ *   经眼孔遮罩裁切永远出不了眼眶) < lash(睁眼睫毛环,眨眼时隐藏)
+ *   < lid_l/r(闭眼件,仅眨眼时显示) < eyestatic(眉毛+白发静止件,永远最上层)
+ * 眨眼 = 隐藏 iris+lash、显示 lids；眉毛/白发由 static 层恒定保住。
  * 立绘本体不随动，仅眼睛注视光标；点击只弹台词气泡（不摆手）。
  */
 
@@ -19,13 +20,14 @@ interface MascotProps {
   toggleHide: string;
 }
 
-/* 部件几何：canvas 700x997 的百分比（源自 _tmp_mascot/parts_report.json） */
+/* 部件几何：canvas 700x997 的百分比（源自 _tmp_mascot/parts_report.json v5.1） */
 const GEO = {
-  irisL: { left: "17.00%", top: "40.02%", width: "13.00%", height: "8.22%" },
-  irisR: { left: "43.43%", top: "50.25%", width: "13.14%", height: "7.22%" },
-  overlay: { left: "16.43%", top: "39.62%", width: "40.86%", height: "18.25%" },
-  lidL: { left: "13.86%", top: "34.80%", width: "20.86%", height: "13.94%" },
-  lidR: { left: "41.71%", top: "44.33%", width: "21.00%", height: "17.35%" },
+  irisL: { left: "16.43%", top: "39.62%", width: "13.71%", height: "8.63%" },
+  irisR: { left: "43.43%", top: "49.85%", width: "13.71%", height: "7.62%" },
+  lash: { left: "11.86%", top: "34.90%", width: "50.71%", height: "25.08%" },
+  static: { left: "11.86%", top: "34.90%", width: "50.71%", height: "26.68%" },
+  lidL: { left: "11.71%", top: "34.80%", width: "20.71%", height: "13.94%" },
+  lidR: { left: "42.86%", top: "44.33%", width: "19.86%", height: "15.95%" },
 };
 
 /* 眼孔遮罩：虹膜位移后被裁切在眼眶内，绝不越界压到睫毛线 */
@@ -157,7 +159,7 @@ export default function FloatingMascot({ quotes, toggleShow, toggleHide }: Masco
         </button>
       )}
 
-      {/* 展开状态：随动在屏幕左侧边缘 */}
+      {/* 展开状态：贴在屏幕左侧边缘 */}
       {visible && (
         <div
           ref={mascotRef}
@@ -193,7 +195,7 @@ export default function FloatingMascot({ quotes, toggleShow, toggleHide }: Masco
             style={{ animation: "mascot-breathe 4.5s ease-in-out infinite" }}
           >
             <div className="relative -ml-2.5 w-36 sm:w-44 md:w-48 aspect-[700/997] filter drop-shadow-[0_8px_20px_rgba(224,144,12,0.18)] dark:drop-shadow-[0_8px_24px_rgba(224,144,12,0.14)]">
-              {/* Z1 底图：眼孔填平眼白 + 身体头发 */}
+              {/* Z10 底图：眼球像素填平眼白 + 身体头发手指 */}
               <div className="absolute inset-0 z-10">
                 <Image
                   src="/oc_base2.png"
@@ -204,7 +206,7 @@ export default function FloatingMascot({ quotes, toggleShow, toggleHide }: Masco
                 />
               </div>
 
-              {/* Z2 虹膜件：外层固定+眼孔遮罩裁切，内层随光标位移（眨眼时隐藏） */}
+              {/* Z20 眼球件：外层固定+眼孔遮罩裁切，内层随光标位移（眨眼时隐藏） */}
               <div
                 className="absolute z-20 pointer-events-none"
                 style={{
@@ -250,26 +252,31 @@ export default function FloatingMascot({ quotes, toggleShow, toggleHide }: Masco
                 </div>
               </div>
 
-              {/* Z5 睁眼睫毛环（眨眼时隐藏） */}
+              {/* Z30 睁眼睫毛环（眨眼时隐藏） */}
               <div
-                className="absolute z-50 pointer-events-none"
-                style={{ ...GEO.overlay, opacity: openEyeOpacity, transition: "opacity 0.07s linear" }}
+                className="absolute z-30 pointer-events-none"
+                style={{ ...GEO.lash, opacity: openEyeOpacity, transition: "opacity 0.07s linear" }}
               >
-                <Image src="/oc_eyeoverlay.png" alt="" fill className="object-contain" />
+                <Image src="/oc_lash.png" alt="" fill className="object-contain" />
               </div>
 
-              {/* Z6 闭眼件（仅眨眼时显示） */}
+              {/* Z40 闭眼件（仅眨眼时显示） */}
               <div
-                className="absolute z-60 pointer-events-none"
+                className="absolute z-40 pointer-events-none"
                 style={{ ...GEO.lidL, opacity: lidOpacity, transition: "opacity 0.07s linear" }}
               >
                 <Image src="/oc_lid_l.png" alt="" fill className="object-contain" />
               </div>
               <div
-                className="absolute z-60 pointer-events-none"
+                className="absolute z-40 pointer-events-none"
                 style={{ ...GEO.lidR, opacity: lidOpacity, transition: "opacity 0.07s linear" }}
               >
                 <Image src="/oc_lid_r.png" alt="" fill className="object-contain" />
+              </div>
+
+              {/* Z50 静止件：眉毛+白发（永远最上层，眨眼不闪失） */}
+              <div className="absolute z-50 pointer-events-none" style={GEO.static}>
+                <Image src="/oc_eyestatic.png" alt="" fill className="object-contain" />
               </div>
             </div>
           </div>
