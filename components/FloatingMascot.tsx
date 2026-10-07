@@ -209,7 +209,7 @@ export default function FloatingMascot({ quotes, toggleShow, toggleHide }: Masco
               {/* Z10 底图：眼区挖空（周边皮肤回填）+ 眉毛白发手指完整 */}
               <div className="absolute inset-0 z-10">
                 <Image
-                  src="/oc_base2.png"
+                  src="/oc_base2.png?v=5"
                   alt="Silver-haired mascot base"
                   fill
                   priority
