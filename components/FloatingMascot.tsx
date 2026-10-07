@@ -43,8 +43,8 @@ const IRIS_IN_SOCK = {
 
 /* 眼眶裁切遮罩：眼球位移后仍被裁在眼眶内（用户手扣 eyesocket 轮廓） */
 const SOCKET_MASK = {
-  l: "url(/oc_socket_l.png?v=7)",
-  r: "url(/oc_socket_r.png?v=7)",
+  l: "url(/oc_socket_l.png?v=8)",
+  r: "url(/oc_socket_r.png?v=8)",
 };
 
 export default function FloatingMascot({ quotes, toggleShow, toggleHide }: MascotProps) {
@@ -209,7 +209,7 @@ export default function FloatingMascot({ quotes, toggleShow, toggleHide }: Masco
               {/* Z10 底图：眼区挖空（周边皮肤回填）+ 眉毛白发手指完整 */}
               <div className="absolute inset-0 z-10">
                 <Image
-                  src="/oc_base2.png?v=7"
+                  src="/oc_base2.png?v=8"
                   alt="Silver-haired mascot base"
                   fill
                   priority
@@ -222,13 +222,13 @@ export default function FloatingMascot({ quotes, toggleShow, toggleHide }: Masco
                 className="absolute z-[15] pointer-events-none"
                 style={{ ...GEO.wallL, opacity: openEyeOpacity, transition: "opacity 0.07s linear" }}
               >
-                <Image src="/oc_wall_l.png?v=7" alt="" fill className="object-contain" />
+                <Image src="/oc_wall_l.png?v=8" alt="" fill className="object-contain" />
               </div>
               <div
                 className="absolute z-[15] pointer-events-none"
                 style={{ ...GEO.wallR, opacity: openEyeOpacity, transition: "opacity 0.07s linear" }}
               >
-                <Image src="/oc_wall_r.png?v=7" alt="" fill className="object-contain" />
+                <Image src="/oc_wall_r.png?v=8" alt="" fill className="object-contain" />
               </div>
 
               {/* Z20 眼球：socket 遮罩窗口固定，窗口内 iris 随光标位移（眨眼隐藏） */}
@@ -252,7 +252,7 @@ export default function FloatingMascot({ quotes, toggleShow, toggleHide }: Masco
                     transition: "transform 0.12s ease-out",
                   }}
                 >
-                  <Image src="/oc_iris_l.png?v=7" alt="" fill className="object-contain" />
+                  <Image src="/oc_iris_l.png?v=8" alt="" fill className="object-contain" />
                 </div>
               </div>
               <div
@@ -275,7 +275,7 @@ export default function FloatingMascot({ quotes, toggleShow, toggleHide }: Masco
                     transition: "transform 0.12s ease-out",
                   }}
                 >
-                  <Image src="/oc_iris_r.png?v=7" alt="" fill className="object-contain" />
+                  <Image src="/oc_iris_r.png?v=8" alt="" fill className="object-contain" />
                 </div>
               </div>
 
@@ -284,13 +284,13 @@ export default function FloatingMascot({ quotes, toggleShow, toggleHide }: Masco
                 className="absolute z-30 pointer-events-none"
                 style={{ ...GEO.lashL, opacity: openEyeOpacity, transition: "opacity 0.07s linear" }}
               >
-                <Image src="/oc_lash_l.png?v=7" alt="" fill className="object-contain" />
+                <Image src="/oc_lash_l.png?v=8" alt="" fill className="object-contain" />
               </div>
               <div
                 className="absolute z-30 pointer-events-none"
                 style={{ ...GEO.lashR, opacity: openEyeOpacity, transition: "opacity 0.07s linear" }}
               >
-                <Image src="/oc_lash_r.png?v=7" alt="" fill className="object-contain" />
+                <Image src="/oc_lash_r.png?v=8" alt="" fill className="object-contain" />
               </div>
 
               {/* Z40 闭眼件（仅眨眼显示；覆盖眼白+眼球+睫毛线区） */}
@@ -298,13 +298,13 @@ export default function FloatingMascot({ quotes, toggleShow, toggleHide }: Masco
                 className="absolute z-40 pointer-events-none"
                 style={{ ...GEO.lidL, opacity: lidOpacity, transition: "opacity 0.07s linear" }}
               >
-                <Image src="/oc_lid_l.png?v=7" alt="" fill className="object-contain" />
+                <Image src="/oc_lid_l.png?v=8" alt="" fill className="object-contain" />
               </div>
               <div
                 className="absolute z-40 pointer-events-none"
                 style={{ ...GEO.lidR, opacity: lidOpacity, transition: "opacity 0.07s linear" }}
               >
-                <Image src="/oc_lid_r.png?v=7" alt="" fill className="object-contain" />
+                <Image src="/oc_lid_r.png?v=8" alt="" fill className="object-contain" />
               </div>
             </div>
           </div>
