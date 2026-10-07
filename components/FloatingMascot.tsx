@@ -4,13 +4,13 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import Image from "next/image";
 
 /**
- * 屏幕左侧随动 Q 版看板娘（Web 2.5D 切件 Live2D 看板娘组件 v2）
+ * 屏幕左侧 Q 版看板娘（Web 2.5D 切件看板娘组件 v3）
  *
  * 层序（Z 从低到高）：
- *   base2(底图,眼孔填平眼白) < iris_l/r(整眼孔虹膜件,随光标位移) < hand2(搭框手)
- *   < wristoverlay(腕部发丝盖片) < eyeoverlay(睁眼睫毛环) < lid_l/r(闭眼件,仅眨眼时显示)
+ *   base2(底图,眼孔填平眼白+完整手指) < iris_l/r(整眼孔虹膜件,随光标位移,
+ *   经眼孔遮罩裁切永远出不了眼眶) < eyeoverlay(睁眼睫毛环) < lid_l/r(闭眼件,仅眨眼时显示)
  * 眨眼 = 隐藏 overlay+iris、显示 lids（qwen-image-2.1 重绘的自然闭眼件）。
- * 招手 = 手部件绕腕枢轴 (94%,50%) 旋转，wristoverlay 盖住关节防断肢。
+ * 立绘本体不随动，仅眼睛注视光标；点击只弹台词气泡（不摆手）。
  */
 
 interface MascotProps {
@@ -23,20 +23,22 @@ interface MascotProps {
 const GEO = {
   irisL: { left: "17.00%", top: "40.02%", width: "13.00%", height: "8.22%" },
   irisR: { left: "43.43%", top: "50.25%", width: "13.14%", height: "7.22%" },
-  hand: { left: "0%", top: "48.85%", width: "7.71%", height: "10.33%" },
-  wrist: { left: "0%", top: "51.86%", width: "9.86%", height: "9.53%" },
   overlay: { left: "16.43%", top: "39.62%", width: "40.86%", height: "18.25%" },
   lidL: { left: "13.86%", top: "34.80%", width: "20.86%", height: "13.94%" },
   lidR: { left: "41.71%", top: "44.33%", width: "21.00%", height: "17.35%" },
 };
 
+/* 眼孔遮罩：虹膜位移后被裁切在眼眶内，绝不越界压到睫毛线 */
+const SOCKET_MASK = {
+  l: "url(/oc_socket_l.png)",
+  r: "url(/oc_socket_r.png)",
+};
+
 export default function FloatingMascot({ quotes, toggleShow, toggleHide }: MascotProps) {
   const [visible, setVisible] = useState(true);
   const [quote, setQuote] = useState<string | null>(null);
-  const [waving, setWaving] = useState(false);
   const [blinking, setBlinking] = useState(false);
   const [eyeOffset, setEyeOffset] = useState({ x: 0, y: 0 });
-  const [tilt, setTilt] = useState(0);
   const quoteTimerRef = useRef<NodeJS.Timeout | null>(null);
   const mascotRef = useRef<HTMLDivElement | null>(null);
 
@@ -61,7 +63,7 @@ export default function FloatingMascot({ quotes, toggleShow, toggleHide }: Masco
     }
   };
 
-  // 1. 眼睛注视光标跟踪（虹膜在眼眶内位移，overlay 睫毛环在上层裁边）
+  // 1. 眼睛注视光标跟踪（仅虹膜位移；立绘本体保持静止）
   useEffect(() => {
     if (!visible) return;
 
@@ -83,10 +85,6 @@ export default function FloatingMascot({ quotes, toggleShow, toggleHide }: Masco
         x: Math.cos(angle) * maxOffset * factor,
         y: Math.sin(angle) * maxOffset * factor,
       });
-
-      const windowH = window.innerHeight;
-      const normY = (e.clientY / windowH) * 2 - 1;
-      setTilt(normY * 2.2);
     };
 
     window.addEventListener("mousemove", handleMouseMove, { passive: true });
@@ -108,11 +106,8 @@ export default function FloatingMascot({ quotes, toggleShow, toggleHide }: Masco
     return () => clearTimeout(blinkTimer);
   }, [visible]);
 
-  // 3. 点击触发互动（招手 + 气泡台词）
+  // 3. 点击触发互动（只弹台词气泡，不摆手）
   const handleClick = useCallback(() => {
-    setWaving(true);
-    setTimeout(() => setWaving(false), 1400);
-
     if (quotes && quotes.length > 0) {
       const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
       setQuote(randomQuote);
@@ -145,18 +140,6 @@ export default function FloatingMascot({ quotes, toggleShow, toggleHide }: Masco
           0%, 100% { transform: translateY(0); }
           50% { transform: translateY(-3px); }
         }
-        @keyframes hand-wave {
-          0% { transform: rotate(0deg); }
-          18% { transform: rotate(-24deg) translateY(-4px) translateX(2px); }
-          36% { transform: rotate(14deg) translateY(-2px); }
-          54% { transform: rotate(-20deg) translateY(-4px) translateX(2px); }
-          72% { transform: rotate(10deg) translateY(-1px); }
-          90% { transform: rotate(-10deg); }
-          100% { transform: rotate(0deg); }
-        }
-        .mascot-waving-hand {
-          animation: hand-wave 1.35s cubic-bezier(0.36, 0.07, 0.19, 0.97) forwards;
-        }
       `}</style>
 
       {/* 折叠收起时：贴在屏幕左侧的微型胶囊唤醒按钮 */}
@@ -178,11 +161,7 @@ export default function FloatingMascot({ quotes, toggleShow, toggleHide }: Masco
       {visible && (
         <div
           ref={mascotRef}
-          className="fixed left-0 bottom-12 z-40 select-none transition-transform duration-300 ease-out"
-          style={{
-            transform: `rotate(${tilt}deg)`,
-            transformOrigin: "left center",
-          }}
+          className="fixed left-0 bottom-12 z-40 select-none"
         >
           {/* 对话气泡 */}
           {quote && (
@@ -225,41 +204,50 @@ export default function FloatingMascot({ quotes, toggleShow, toggleHide }: Masco
                 />
               </div>
 
-              {/* Z2 虹膜件：随光标位移（眨眼时隐藏） */}
+              {/* Z2 虹膜件：外层固定+眼孔遮罩裁切，内层随光标位移（眨眼时隐藏） */}
               <div
                 className="absolute z-20 pointer-events-none"
                 style={{
                   ...GEO.irisL,
                   opacity: openEyeOpacity,
-                  transform: `translate(${eyeOffset.x}px, ${eyeOffset.y}px)`,
-                  transition: "transform 0.12s ease-out, opacity 0.07s linear",
+                  WebkitMaskImage: SOCKET_MASK.l,
+                  maskImage: SOCKET_MASK.l,
+                  WebkitMaskSize: "100% 100%",
+                  maskSize: "100% 100%",
+                  transition: "opacity 0.07s linear",
                 }}
               >
-                <Image src="/oc_iris_l.png" alt="" fill className="object-contain" />
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    transform: `translate(${eyeOffset.x}px, ${eyeOffset.y}px)`,
+                    transition: "transform 0.12s ease-out",
+                  }}
+                >
+                  <Image src="/oc_iris_l.png" alt="" fill className="object-contain" />
+                </div>
               </div>
               <div
                 className="absolute z-20 pointer-events-none"
                 style={{
                   ...GEO.irisR,
                   opacity: openEyeOpacity,
-                  transform: `translate(${eyeOffset.x}px, ${eyeOffset.y}px)`,
-                  transition: "transform 0.12s ease-out, opacity 0.07s linear",
+                  WebkitMaskImage: SOCKET_MASK.r,
+                  maskImage: SOCKET_MASK.r,
+                  WebkitMaskSize: "100% 100%",
+                  maskSize: "100% 100%",
+                  transition: "opacity 0.07s linear",
                 }}
               >
-                <Image src="/oc_iris_r.png" alt="" fill className="object-contain" />
-              </div>
-
-              {/* Z3 搭框手：点击绕腕枢轴招手 */}
-              <div
-                className={`absolute z-30 pointer-events-none ${waving ? "mascot-waving-hand" : ""}`}
-                style={{ ...GEO.hand, transformOrigin: "94% 50%" }}
-              >
-                <Image src="/oc_hand2.png" alt="Mascot hand" fill className="object-contain" />
-              </div>
-
-              {/* Z4 腕部发丝盖片：盖住手腕关节 */}
-              <div className="absolute z-40 pointer-events-none" style={GEO.wrist}>
-                <Image src="/oc_wristoverlay.png" alt="" fill className="object-contain" />
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    transform: `translate(${eyeOffset.x}px, ${eyeOffset.y}px)`,
+                    transition: "transform 0.12s ease-out",
+                  }}
+                >
+                  <Image src="/oc_iris_r.png" alt="" fill className="object-contain" />
+                </div>
               </div>
 
               {/* Z5 睁眼睫毛环（眨眼时隐藏） */}
