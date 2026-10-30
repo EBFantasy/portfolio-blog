@@ -55,6 +55,17 @@ export default function PriceMonitor({ lang, backHref, backLabel }: { lang: Lang
     setLogs([]);
   };
 
+  const evaluatePrice = (p: (typeof PRODUCTS)[number], next: number) => {
+    const crossed = next < threshold;
+    if (crossed && !alertOn) {
+      setAlertOn(true);
+      setAlerts((a) => a + 1);
+      setLogs((ls) => [...ls.slice(-7), { t: L({ zh: `⚠ 告警：¥${next.toFixed(1)} 已跌破阈值 ¥${threshold}（${p.name.zh}）`, en: `⚠ ALERT: ¥${next.toFixed(1)} below threshold ¥${threshold} (${p.name.en})` }, lang), bad: true }]);
+    } else if (!crossed && alertOn) {
+      setAlertOn(false);
+    }
+  };
+
   const step = () => {
     const p = PRODUCTS[sel];
     let next = priceRef.current + (Math.random() - 0.48) * p.vol;
@@ -66,14 +77,7 @@ export default function PriceMonitor({ lang, backHref, backLabel }: { lang: Lang
     setPrices((arr) => [...arr.slice(-(WINDOW - 1)), next]);
 
     const ms = 90 + Math.floor(Math.random() * 160);
-    const crossed = next < threshold;
-    if (crossed && !alertOn) {
-      setAlertOn(true);
-      setAlerts((a) => a + 1);
-      setLogs((ls) => [...ls.slice(-7), { t: L({ zh: `⚠ 告警：¥${next.toFixed(1)} 已跌破阈值 ¥${threshold}（${p.name.zh}）`, en: `⚠ ALERT: ¥${next.toFixed(1)} below threshold ¥${threshold} (${p.name.en})` }, lang), bad: true }]);
-    } else if (!crossed && alertOn) {
-      setAlertOn(false);
-    }
+    evaluatePrice(p, next);
     setLogs((ls) => [...ls.slice(-7), { t: `GET /price/${p.sku} → 200 · ¥${next.toFixed(1)} · ${ms}ms` }]);
   };
 
@@ -95,6 +99,7 @@ export default function PriceMonitor({ lang, backHref, backLabel }: { lang: Lang
     const next = Math.round(priceRef.current * 0.85 * 10) / 10;
     priceRef.current = next;
     setPrices((arr) => [...arr.slice(-(WINDOW - 1)), next]);
+    evaluatePrice(p, next);
     setLogs((ls) => [...ls.slice(-7), { t: L({ zh: `⚡ 模拟促销：${p.name.zh} 直降 15% → ¥${next.toFixed(1)}`, en: `⚡ Promo simulated: ${p.name.en} -15% → ¥${next.toFixed(1)}` }, lang), bad: true }]);
   };
 
@@ -150,8 +155,8 @@ export default function PriceMonitor({ lang, backHref, backLabel }: { lang: Lang
           <p className="mt-3 max-w-2xl text-sm leading-relaxed" style={{ color: "var(--pm-muted)" }}>
             {L(
               {
-                zh: "采集器每 0.75 秒回报一次模拟价格，折线实时延伸。把阈值拖到现价上方试试，或直接点「模拟促销」压价触发告警。",
-                en: "The collector reports a simulated price every 0.75s and the line extends live. Drag the threshold above the current price, or hit Promo to crash it and fire the alert.",
+                zh: "采集器每 0.75 秒回报一次模拟价格，折线实时延伸。把阈值拖到现价上方试试；暂停时也可点「模拟促销」压价，立即按同一阈值规则触发告警。",
+                en: "The collector reports a simulated price every 0.75s and the line extends live. Drag the threshold above the current price, or hit Promo even while paused to trigger the same threshold alert immediately.",
               },
               lang
             )}
@@ -225,7 +230,7 @@ export default function PriceMonitor({ lang, backHref, backLabel }: { lang: Lang
 
             <div className="flex flex-col gap-4">
               <div className="rounded-2xl border p-4" style={{ borderColor: "var(--pm-line)", background: "var(--pm-panel)" }}>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   {!running ? (
                     <button type="button" onClick={() => setRunning(true)} className="flex-1 rounded-lg px-4 py-2.5 text-sm font-bold text-black transition hover:brightness-110 active:scale-95" style={{ background: "var(--pm-acc)" }}>
                       {L({ zh: prices.length > 1 ? "继续监控" : "启动监控", en: prices.length > 1 ? "Resume" : "Start monitoring" }, lang)}
@@ -257,7 +262,7 @@ export default function PriceMonitor({ lang, backHref, backLabel }: { lang: Lang
                   />
                 </label>
                 {alertOn && (
-                  <div className="mt-3 rounded-lg border px-3 py-2 text-[11px] font-bold" style={{ borderColor: "var(--pm-warn)", color: "var(--pm-warn)", background: "rgba(251,113,133,0.08)", animation: "pm-alert .5s ease both" }}>
+                  <div role="status" aria-live="polite" aria-atomic="true" className="mt-3 rounded-lg border px-3 py-2 text-[11px] font-bold" style={{ borderColor: "var(--pm-warn)", color: "var(--pm-warn)", background: "rgba(251,113,133,0.08)", animation: "pm-alert .5s ease both" }}>
                     🔔 {L({ zh: "价格已跌破阈值——该通知订阅用户了", en: "Price crossed below threshold — time to notify subscribers" }, lang)}
                   </div>
                 )}

@@ -810,13 +810,15 @@ function ReplayDemo({ lang }: { lang: Lang }) {
                 ))}
               </div>
               <div className="mx-auto mt-3 h-9 w-48 rounded-lg" style={{ background: "rgba(27,41,66,0.7)" }} />
-              <button
-                type="button"
-                className="mx-auto mt-3 block h-11 w-48 rounded-xl text-xs font-bold text-white"
+              <div
+                className="mx-auto mt-3 flex h-11 w-48 items-center justify-center rounded-xl text-xs font-bold text-white"
                 style={{ background: "linear-gradient(135deg,var(--pl-acc),#0369A1)" }}
               >
-                {L({ zh: "立即支付 ¥248", en: "Pay ¥248 now" }, lang)}
-              </button>
+                {L({ zh: "模拟支付 ¥248", en: "Simulated payment · ¥248" }, lang)}
+              </div>
+              <p className="mt-1.5 text-center text-[10px]" style={{ color: "var(--pl-muted)" }}>
+                {L({ zh: "回放界面元素，不可支付", en: "Replay artwork · not a payment control" }, lang)}
+              </p>
               {/* 光标 */}
               <span
                 className="absolute z-10 h-4 w-4 rounded-full border-2 transition-all duration-1000 ease-in-out"
@@ -850,7 +852,7 @@ function ReplayDemo({ lang }: { lang: Lang }) {
               ))}
             </div>
             {step >= 4 && (
-              <p className="mt-3 rounded-lg border p-3 text-[11px] leading-relaxed" style={{ borderColor: "rgba(251,113,133,0.4)", color: "var(--pl-muted)", animation: "pl-fadeup .4s ease both" }}>
+              <p aria-live="polite" className="mt-3 rounded-lg border p-3 text-[11px] leading-relaxed" style={{ borderColor: "rgba(251,113,133,0.4)", color: "var(--pl-muted)", animation: "pl-fadeup .4s ease both" }}>
                 {L(
                   { zh: "Pulse 判定：支付按钮响应异常（连续 3 次点击无反馈）。已关联同类会话 214 个。", en: "Pulse verdict: pay button unresponsive (3 clicks, no feedback). 214 similar sessions linked." },
                   lang
@@ -913,6 +915,23 @@ function Compliance({ lang }: { lang: Lang }) {
     { name: "ISO 27001", sub: { zh: "信息安全管理体系认证", en: "ISMS certified" } },
     { name: lang === "zh" ? "数据驻留可选" : "Region-pinned", sub: { zh: "数据存储区域自主可选", en: "Choose your data region" } },
   ];
+  const downloadReport = () => {
+    const content = [
+      "PULSE ANALYTICS — CONCEPT AUDIT REPORT",
+      lang === "zh" ? "本文件是虚构产品的概念演示，不是真实审计或认证报告。" : "This is a concept demo for a fictional product, not a real audit or certification report.",
+      "",
+      ...items.map((item) => `${item.name}: ${L(item.sub, lang)} (${lang === "zh" ? "界面示意" : "interface sample"})`),
+    ].join("\n");
+    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = "pulse-concept-audit-report.txt";
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(url);
+  };
   return (
     <section id="pl-sec" className="border-t px-6 py-14 sm:px-10" style={{ borderColor: "var(--pl-line)", background: "var(--pl-bg)" }}>
       <div ref={ref} className="flex flex-wrap items-end justify-between gap-3">
@@ -924,9 +943,14 @@ function Compliance({ lang }: { lang: Lang }) {
             {L({ zh: "企业级安全，默认开启", en: "Enterprise-grade security, on by default" }, lang)}
           </h2>
         </div>
-        <a href="#pl-cta" className="text-xs font-semibold transition hover:opacity-70" style={{ color: "var(--pl-acc2)" }}>
-          {L({ zh: "下载最新审计报告 →", en: "Download the latest audit report →" }, lang)}
-        </a>
+        <div className="text-left sm:text-right">
+          <button type="button" onClick={downloadReport} className="text-xs font-semibold transition hover:opacity-70" style={{ color: "var(--pl-acc2)" }}>
+            {L({ zh: "下载概念审计报告（TXT）→", en: "Download concept audit report (TXT) →" }, lang)}
+          </button>
+          <p className="mt-1 max-w-xs text-[10px] leading-relaxed" style={{ color: "var(--pl-muted)" }}>
+            {L({ zh: "本地生成并下载；内容为虚构说明，并非真实认证文件。", en: "Generated and downloaded locally; fictional notes, not a real certification." }, lang)}
+          </p>
+        </div>
       </div>
       <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         {items.map((it, i) => (
@@ -988,12 +1012,12 @@ function Cta({ lang }: { lang: Lang }) {
         <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-white/75">
           {L({ zh: "免费版每月 100 万事件，小型团队永久可用，无需绑卡。", en: "Free tier: 1M events/month, forever, no card required." }, lang)}
         </p>
-        <button
-          type="button"
-          className="mt-8 rounded-xl bg-white px-8 py-3.5 text-sm font-semibold text-zinc-900 shadow-lg transition hover:scale-[1.03] active:scale-[0.98]"
+        <a
+          href={`/${lang}/services`}
+          className="mt-8 inline-block rounded-xl bg-white px-8 py-3.5 text-sm font-semibold text-zinc-900 shadow-lg transition hover:scale-[1.03] active:scale-[0.98]"
         >
           {L({ zh: "立即接入", en: "Get started" }, lang)}
-        </button>
+        </a>
       </Reveal>
     </section>
   );

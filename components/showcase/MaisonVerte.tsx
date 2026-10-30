@@ -1,6 +1,6 @@
 "use client";
 
-import type { CSSProperties } from "react";
+import { useState, type CSSProperties } from "react";
 import BackToCase from "@/components/BackToCase";
 import { Reveal } from "@/components/showcase/reveal";
 
@@ -85,7 +85,7 @@ function SiteNav({ lang }: { lang: Lang }) {
         className="rounded-full px-4 py-2 text-xs font-semibold text-white transition hover:opacity-90"
         style={{ background: "var(--mv-acc2)" }}
       >
-        {L({ zh: "预订座位", en: "Reserve a table" }, lang)}
+        {L({ zh: "预订演示", en: "Reservation demo" }, lang)}
       </a>
     </header>
   );
@@ -119,7 +119,7 @@ function Hero({ lang }: { lang: Lang }) {
             className="rounded-full px-6 py-3 text-sm font-semibold shadow-lg transition hover:scale-[1.03] active:scale-[0.98]"
             style={{ background: "var(--mv-bg)", color: "var(--mv-deep)" }}
           >
-            {L({ zh: "预订座位", en: "Reserve a table" }, lang)}
+            {L({ zh: "预订演示", en: "Reservation demo" }, lang)}
           </a>
           <a
             href="#mv-menu"
@@ -441,6 +441,7 @@ function PressQuotes({ lang }: { lang: Lang }) {
 
 /* ---------------- 预订信息 ---------------- */
 function Reservation({ lang }: { lang: Lang }) {
+  const [showConcept, setShowConcept] = useState(false);
   const info: [Bi, Bi][] = [
     [
       { zh: "营业时间", en: "Hours" },
@@ -452,7 +453,7 @@ function Reservation({ lang }: { lang: Lang }) {
     ],
     [
       { zh: "预订", en: "Reservations" },
-      { zh: "+86 21 6420 1127 · 支持在线订位", en: "+86 21 6420 1127 · online booking open" },
+      { zh: "概念演示 · 不提供真实电话或在线订位", en: "Concept demo · no live phone or online booking" },
     ],
     [
       { zh: "温馨提示", en: "Good to know" },
@@ -464,11 +465,11 @@ function Reservation({ lang }: { lang: Lang }) {
       <Reveal>
         <div className="text-center">
           <h2 className="text-2xl font-semibold text-white sm:text-3xl" style={SERIF}>
-            {L({ zh: "本周仅余 6 席", en: "Only 6 tables left this week" }, lang)}
+            {L({ zh: "预订流程概念演示", en: "Reservation flow concept" }, lang)}
           </h2>
           <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-white/70">
             {L(
-              { zh: "周末建议提前三天预订；包间可容纳 8–20 人私宴。", en: "Weekends fill fast; private rooms seat 8–20." },
+              { zh: "此页面不连接餐厅或订位系统，以下信息仅用于界面展示。", en: "This concept is not connected to a restaurant or booking system; the details below are for interface display only." },
               lang
             )}
           </p>
@@ -490,11 +491,26 @@ function Reservation({ lang }: { lang: Lang }) {
         <div className="mt-10 text-center">
           <button
             type="button"
+            onClick={() => setShowConcept((open) => !open)}
+            aria-expanded={showConcept}
+            aria-controls="mv-reservation-concept"
             className="rounded-full px-9 py-3.5 text-sm font-semibold shadow-lg transition hover:scale-[1.03] active:scale-[0.98]"
             style={{ background: "var(--mv-acc2)", color: "#fff" }}
           >
-            {L({ zh: "立即预订座位", en: "Reserve a table" }, lang)}
+            {showConcept
+              ? L({ zh: "收起演示说明", en: "Hide demo note" }, lang)
+              : L({ zh: "查看预订演示说明", en: "About this reservation demo" }, lang)}
           </button>
+          <div className="mx-auto mt-4 max-w-md" aria-live="polite">
+            {showConcept && (
+              <p id="mv-reservation-concept" className="rounded-2xl border border-white/15 bg-white/5 px-5 py-4 text-left text-xs leading-relaxed text-white/80">
+                {L({
+                  zh: "这是虚构餐厅的交互概念演示。你可以展开这条说明，但页面不会收集信息、提交订位或生成预订记录。",
+                  en: "This is an interaction concept for a fictional restaurant. It does not collect details, submit reservations, or create booking records.",
+                }, lang)}
+              </p>
+            )}
+          </div>
         </div>
       </Reveal>
     </section>

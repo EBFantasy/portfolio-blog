@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import BackToCase from "@/components/BackToCase";
 import { CountUp, Reveal } from "@/components/showcase/reveal";
 
@@ -151,8 +151,8 @@ function Hero({ lang }: { lang: Lang }) {
               className="sf-ghost group flex items-center gap-2.5 border px-7 py-3.5 text-sm font-semibold"
               style={{ borderColor: "rgba(242,244,248,0.5)", color: "var(--sf-fg)", background: "rgba(6,7,13,0.35)" }}
             >
-              <span className="flex h-6 w-6 items-center justify-center rounded-full text-[9px]" style={{ background: "var(--sf-gold)", color: "#000" }}>▶</span>
-              {L({ zh: "观看 PV", en: "WATCH PV" }, lang)}
+              <span className="flex h-6 w-6 items-center justify-center rounded-full text-[9px]" style={{ background: "var(--sf-gold)", color: "#000" }}>▦</span>
+              {L({ zh: "影像画廊", en: "VIEW GALLERY" }, lang)}
             </a>
           </div>
         </Reveal>
@@ -171,11 +171,13 @@ function Hero({ lang }: { lang: Lang }) {
             <span className="h-1.5 w-1.5 rounded-full" style={{ background: "var(--sf-gold)", animation: "sf-blink 1.6s ease infinite" }} />
             {L({ zh: "最新情报", en: "LATEST" }, lang)}
           </span>
-          <div key={tick} style={{ animation: "sf-fadein .5s ease both" }} className="min-w-0 flex-1">
-            <span className="mr-2.5 border px-1.5 py-0.5 text-[10px] font-semibold align-middle" style={{ borderColor: "var(--sf-gold)", color: "var(--sf-gold)" }}>
-              {L(item.tag, lang)}
-            </span>
-            <span className="text-xs sm:text-[13px]" style={{ color: "var(--sf-fg)" }}>{L(item.text, lang)}</span>
+          <div className="min-w-0 flex-1" aria-live="polite">
+            <div key={tick} style={{ animation: "sf-fadein .5s ease both" }}>
+              <span className="mr-2.5 border px-1.5 py-0.5 text-[10px] font-semibold align-middle" style={{ borderColor: "var(--sf-gold)", color: "var(--sf-gold)" }}>
+                {L(item.tag, lang)}
+              </span>
+              <span className="text-xs sm:text-[13px]" style={{ color: "var(--sf-fg)" }}>{L(item.text, lang)}</span>
+            </div>
           </div>
           <div className="hidden shrink-0 gap-1.5 sm:flex">
             {TICKER.map((_, i) => (
@@ -259,7 +261,7 @@ function World({ lang }: { lang: Lang }) {
               )}
             </p>
             <div className="mt-9 grid grid-cols-2 gap-x-8 gap-y-6 sm:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
-              {WORLD_STATS.map((s, i) => (
+              {WORLD_STATS.map((s) => (
                 <div key={s.label.en}>
                   <div className="text-2xl font-black" style={{ color: "var(--sf-gold)" }}>
                     <CountUp to={s.to} suffix={s.suffix} duration={1400} />
@@ -420,14 +422,15 @@ function Characters({ lang }: { lang: Lang }) {
   );
 }
 
-/* ================= 影像资料 ================= */
-const MEDIA: { img: string; dur: string; title: Bi }[] = [
-  { img: `${IMG}/media-battle.jpg`, dur: "02:14", title: { zh: "战斗演示：断星峡谷", en: "Combat Demo: Shattered-Star Canyon" } },
-  { img: `${IMG}/media-city.jpg`, dur: "01:38", title: { zh: "星历祭 PV", en: "Starfeast Festival PV" } },
-  { img: `${IMG}/world.jpg`, dur: "03:05", title: { zh: "世界观先导片", en: "World Prelude Film" } },
+/* ================= 影像画廊（本地图片查看，无真实视频） ================= */
+const MEDIA: { img: string; title: Bi }[] = [
+  { img: `${IMG}/media-battle.jpg`, title: { zh: "战斗场景：断星峡谷", en: "Combat Scene: Shattered-Star Canyon" } },
+  { img: `${IMG}/media-city.jpg`, title: { zh: "星历祭主视觉", en: "Starfeast Key Visual" } },
+  { img: `${IMG}/world.jpg`, title: { zh: "世界观概念图", en: "World Concept Art" } },
 ];
 
 function Media({ lang }: { lang: Lang }) {
+  const [view, setView] = useState<number | null>(null);
   return (
     <section id="sf-media" className="border-t px-6 py-16 sm:px-10 lg:py-20" style={{ borderColor: "var(--sf-line)", background: "var(--sf-bg)" }}>
       <Reveal dir="right">
@@ -435,13 +438,22 @@ function Media({ lang }: { lang: Lang }) {
           <span>03</span><span className="h-px w-10" style={{ background: "var(--sf-gold)" }} /><span>MEDIA</span>
         </div>
         <h2 className="mt-4 text-2xl font-black tracking-wider sm:text-[2rem]" style={{ color: "var(--sf-fg)" }}>
-          {L({ zh: "影像资料", en: "Videos & Trailers" }, lang)}
+          {L({ zh: "影像画廊", en: "Image Gallery" }, lang)}
         </h2>
+        <p className="mt-3 max-w-xl text-[12px] leading-relaxed" style={{ color: "var(--sf-muted)" }}>
+          {L({ zh: "概念演示：本模板没有真实视频。点击任意图片可在下方本地查看大图。", en: "Concept demo: this template has no real videos. Click any image to view it locally below." }, lang)}
+        </p>
       </Reveal>
       <div className="mt-9 grid gap-4 sm:grid-cols-3">
         {MEDIA.map((m, i) => (
           <Reveal key={m.img} dir={i === 1 ? "left" : "right"} delay={i * 110}>
-            <button type="button" className="sf-thumb group block w-full text-left">
+            <button
+              type="button"
+              onClick={() => setView(view === i ? null : i)}
+              aria-expanded={view === i}
+              aria-controls="sf-media-view"
+              className="sf-thumb group block w-full text-left"
+            >
               <div className="relative aspect-video overflow-hidden">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={m.img} alt={m.title.en} className="sf-thumbimg h-full w-full object-cover transition-transform duration-500" />
@@ -450,17 +462,42 @@ function Media({ lang }: { lang: Lang }) {
                   className="sf-play absolute left-1/2 top-1/2 flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full text-sm text-black transition-transform duration-300"
                   style={{ background: "rgba(232,193,90,0.92)", animation: "sf-pulse 2.6s ease infinite" }}
                 >
-                  ▶
+                  ＋
                 </span>
-                <span className="absolute bottom-2.5 right-3 text-[10px] tracking-widest" style={{ color: "rgba(242,244,248,0.9)", ...MONO }}>{m.dur}</span>
               </div>
               <div className="mt-3 flex items-center justify-between gap-3">
                 <span className="text-[13px] font-semibold" style={{ color: "var(--sf-fg)" }}>{L(m.title, lang)}</span>
-                <span className="text-[10px] tracking-widest transition-colors group-hover:text-[color:var(--sf-gold)]" style={{ color: "var(--sf-muted)" }}>▶ {L({ zh: "播放", en: "PLAY" }, lang)}</span>
+                <span className="shrink-0 text-[10px] tracking-widest transition-colors group-hover:text-[color:var(--sf-gold)]" style={{ color: "var(--sf-muted)" }}>
+                  {view === i ? L({ zh: "收起", en: "CLOSE" }, lang) : L({ zh: "查看大图", en: "VIEW IMAGE" }, lang)}
+                </span>
               </div>
             </button>
           </Reveal>
         ))}
+      </div>
+      <div aria-live="polite">
+        {view !== null && (
+          <div id="sf-media-view" className="mt-7 overflow-hidden rounded-2xl border" style={{ borderColor: "var(--sf-line)", background: "var(--sf-panel)" }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={MEDIA[view].img} alt={MEDIA[view].title.en} className="mx-auto w-full object-contain" style={{ maxHeight: "58vh", background: "#000" }} />
+            <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
+              <div className="min-w-0">
+                <div className="text-sm font-semibold" style={{ color: "var(--sf-fg)" }}>{L(MEDIA[view].title, lang)}</div>
+                <p className="mt-1 text-[11px] leading-relaxed" style={{ color: "var(--sf-muted)" }}>
+                  {L({ zh: "概念演示：无真实视频可播放，此处为本地图片查看。", en: "Concept demo: no real video to play — this is a local image view." }, lang)}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setView(null)}
+                className="shrink-0 border px-5 py-2 text-xs font-semibold tracking-widest transition hover:bg-[color:var(--sf-gold)] hover:text-black"
+                style={{ borderColor: "var(--sf-gold)", color: "var(--sf-gold)" }}
+              >
+                {L({ zh: "关闭", en: "CLOSE" }, lang)}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </section>
   );
@@ -476,6 +513,8 @@ const NEWS: { date: string; cat: Bi; color: string; title: Bi }[] = [
 ];
 
 function News({ lang }: { lang: Lang }) {
+  const [openIdx, setOpenIdx] = useState<number | null>(null);
+  const [showAll, setShowAll] = useState(false);
   return (
     <section id="sf-news" className="border-t px-6 py-16 sm:px-10 lg:py-20" style={{ borderColor: "var(--sf-line)", background: "var(--sf-panel)" }}>
       <Reveal dir="left">
@@ -486,33 +525,68 @@ function News({ lang }: { lang: Lang }) {
           <h2 className="text-2xl font-black tracking-wider sm:text-[2rem]" style={{ color: "var(--sf-fg)" }}>
             {L({ zh: "最新情报", en: "Latest Intel" }, lang)}
           </h2>
-          <a href="#sf-download" className="text-xs font-semibold transition hover:opacity-70" style={{ color: "var(--sf-muted)" }}>
-            {L({ zh: "查看全部 →", en: "VIEW ALL →" }, lang)}
-          </a>
+          <button
+            type="button"
+            onClick={() => setShowAll((v) => !v)}
+            aria-expanded={showAll}
+            aria-controls="sf-news-all-note"
+            className="text-xs font-semibold transition hover:opacity-70"
+            style={{ color: "var(--sf-muted)" }}
+          >
+            {showAll
+              ? L({ zh: "收起说明 ↑", en: "HIDE NOTE ↑" }, lang)
+              : L({ zh: "查看全部 →", en: "VIEW ALL →" }, lang)}
+          </button>
+        </div>
+        <div aria-live="polite">
+          {showAll && (
+            <p id="sf-news-all-note" className="mt-3 text-[11px] leading-relaxed sm:text-right" style={{ color: "var(--sf-muted)" }}>
+              {L(
+                { zh: `本概念演示已列出全部 ${NEWS.length} 条情报，无独立新闻页面。`, en: `This concept demo lists all ${NEWS.length} intel items; there is no standalone news page.` },
+                lang
+              )}
+            </p>
+          )}
         </div>
       </Reveal>
       <Reveal dir="right" delay={140}>
         <div className="mt-8 border-t" style={{ borderColor: "var(--sf-line)" }}>
-          {NEWS.map((n) => (
-            <a
-              key={n.title.en}
-              href="#sf-news"
-              className="sf-newsrow group flex items-center gap-4 border-b py-4 transition-colors sm:gap-7"
-              style={{ borderColor: "var(--sf-line)" }}
-            >
-              <span className="shrink-0 text-xs tracking-wider" style={{ color: "var(--sf-muted)", ...MONO }}>{n.date}</span>
-              <span
-                className="hidden w-16 shrink-0 border px-1.5 py-0.5 text-center text-[10px] font-bold tracking-widest sm:inline-block"
-                style={{ borderColor: n.color, color: n.color }}
-              >
-                {L(n.cat, lang)}
-              </span>
-              <span className="min-w-0 flex-1 truncate text-[13.5px] transition-colors group-hover:text-[color:var(--sf-gold)]" style={{ color: "var(--sf-fg)" }}>
-                {L(n.title, lang)}
-              </span>
-              <span className="shrink-0 text-xs transition-transform group-hover:translate-x-1" style={{ color: "var(--sf-muted)" }}>→</span>
-            </a>
-          ))}
+          {NEWS.map((n, i) => {
+            const open = openIdx === i;
+            return (
+              <div key={n.title.en} className="border-b" style={{ borderColor: "var(--sf-line)" }}>
+                <button
+                  type="button"
+                  onClick={() => setOpenIdx(open ? null : i)}
+                  aria-expanded={open}
+                  aria-controls={`sf-news-note-${i}`}
+                  className="sf-newsrow group flex w-full items-center gap-4 py-4 text-left transition-colors sm:gap-7"
+                >
+                  <span className="shrink-0 text-xs tracking-wider" style={{ color: "var(--sf-muted)", ...MONO }}>{n.date}</span>
+                  <span
+                    className="hidden w-16 shrink-0 border px-1.5 py-0.5 text-center text-[10px] font-bold tracking-widest sm:inline-block"
+                    style={{ borderColor: n.color, color: n.color }}
+                  >
+                    {L(n.cat, lang)}
+                  </span>
+                  <span className="min-w-0 flex-1 truncate text-[13.5px] transition-colors group-hover:text-[color:var(--sf-gold)]" style={{ color: "var(--sf-fg)" }}>
+                    {L(n.title, lang)}
+                  </span>
+                  <span className="shrink-0 text-xs" style={{ color: "var(--sf-muted)" }}>{open ? "－" : "＋"}</span>
+                </button>
+                <div aria-live="polite">
+                  {open && (
+                    <p id={`sf-news-note-${i}`} className="pb-4 pr-2 text-[11px] leading-relaxed" style={{ color: "var(--sf-muted)" }}>
+                      {L(
+                        { zh: "概念演示：无独立新闻页面，此条为界面样例；点击仅展开本说明。", en: "Concept demo: no standalone news page — this row is an interface sample; clicking only opens this note." },
+                        lang
+                      )}
+                    </p>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </Reveal>
     </section>
@@ -546,6 +620,7 @@ function FakeQR() {
 }
 
 function Download({ lang }: { lang: Lang }) {
+  const [openNote, setOpenNote] = useState(false);
   return (
     <section id="sf-download" className="relative overflow-hidden border-t px-6 py-20 text-center sm:px-10" style={{ borderColor: "var(--sf-line)", background: "radial-gradient(120% 140% at 50% 110%, rgba(232,193,90,0.16) 0%, rgba(6,7,13,0.4) 45%, var(--sf-bg) 80%)" }}>
       <Reveal>
@@ -566,7 +641,7 @@ function Download({ lang }: { lang: Lang }) {
         <div className="mt-10 flex flex-col items-center justify-center gap-8 sm:flex-row sm:gap-12">
           <div className="flex flex-col items-center gap-4">
             <FakeQR />
-            <span className="text-[11px] tracking-widest" style={{ color: "var(--sf-muted)" }}>{L({ zh: "扫码下载", en: "Scan to download" }, lang)}</span>
+            <span className="text-[11px] tracking-widest" style={{ color: "var(--sf-muted)" }}>{L({ zh: "示意图，不可扫码", en: "Illustration only — not scannable" }, lang)}</span>
           </div>
           <div className="flex flex-col items-center gap-3.5">
             {[
@@ -574,9 +649,12 @@ function Download({ lang }: { lang: Lang }) {
               { name: "Google Play", sub: { zh: "Android", en: "Android" } },
               { name: "Windows", sub: { zh: "PC 客户端", en: "PC client" } },
             ].map((p) => (
-              <a
+              <button
                 key={p.name}
-                href="#sf-download"
+                type="button"
+                onClick={() => setOpenNote((v) => !v)}
+                aria-expanded={openNote}
+                aria-controls="sf-dl-note"
                 className="sf-dl flex w-64 items-center justify-between border px-5 py-3"
                 style={{ borderColor: "var(--sf-line)", background: "rgba(12,15,26,0.7)" }}
               >
@@ -584,10 +662,20 @@ function Download({ lang }: { lang: Lang }) {
                   <span className="block text-sm font-bold">{p.name}</span>
                   <span className="sf-dl-sub block text-[10px] tracking-wider" style={{ color: "var(--sf-muted)" }}>{L(p.sub, lang)}</span>
                 </span>
-                <span className="text-lg">↓</span>
-              </a>
+                <span className="text-base font-bold">{openNote ? "－" : "i"}</span>
+              </button>
             ))}
           </div>
+        </div>
+        <div aria-live="polite">
+          {openNote && (
+            <p id="sf-dl-note" className="mx-auto mt-6 max-w-md rounded-xl border px-5 py-3.5 text-left text-[11px] leading-relaxed" style={{ borderColor: "var(--sf-line)", color: "var(--sf-muted)", background: "rgba(12,15,26,0.6)" }}>
+              {L(
+                { zh: "概念演示：二维码为示意图，以上商店入口不提供真实安装包、商店跳转或扫码下载；点击仅展开本说明。", en: "Concept demo: the QR is an illustrative sample. These store buttons provide no real installers, store links or scan-downloads — clicking only opens this note." },
+                lang
+              )}
+            </p>
+          )}
         </div>
         <div className="mt-9 flex flex-wrap items-center justify-center gap-3 text-[10px]" style={{ color: "var(--sf-muted)" }}>
           <span className="border px-2 py-1 tracking-widest" style={{ borderColor: "var(--sf-line)" }}>{L({ zh: "适龄提示 12+", en: "RATED 12+" }, lang)}</span>
@@ -601,6 +689,7 @@ function Download({ lang }: { lang: Lang }) {
 
 /* ================= 页脚 ================= */
 function Footer({ lang }: { lang: Lang }) {
+  const [openLink, setOpenLink] = useState<Bi | null>(null);
   const cols: { head: Bi; links: Bi[] }[] = [
     { head: { zh: "游戏", en: "Game" }, links: [{ zh: "世界观", en: "World" }, { zh: "角色图鉴", en: "Characters" }, { zh: "世界观设定集", en: "Artbook" }, { zh: "版本情报", en: "Version news" }] },
     { head: { zh: "社区", en: "Community" }, links: [{ zh: "官方论坛", en: "Forum" }, { zh: "同人创作", en: "Fan works" }, { zh: "创作者激励", en: "Creator program" }] },
@@ -628,13 +717,32 @@ function Footer({ lang }: { lang: Lang }) {
               <ul className="mt-3.5 space-y-2.5">
                 {c.links.map((l) => (
                   <li key={l.en}>
-                    <a href="#sf-top" className="text-xs transition hover:text-[color:var(--sf-gold)]" style={{ color: "var(--sf-muted)" }}>{L(l, lang)}</a>
+                    <button
+                      type="button"
+                      onClick={() => setOpenLink(openLink && openLink.en === l.en ? null : l)}
+                      aria-expanded={openLink?.en === l.en}
+                      aria-controls="sf-footer-note"
+                      className="text-left text-xs transition hover:text-[color:var(--sf-gold)]"
+                      style={{ color: "var(--sf-muted)" }}
+                    >
+                      {L(l, lang)}
+                    </button>
                   </li>
                 ))}
               </ul>
             </div>
           ))}
         </div>
+      </div>
+      <div aria-live="polite">
+        {openLink && (
+          <p id="sf-footer-note" className="mt-6 rounded-xl border px-5 py-3 text-[11px] leading-relaxed" style={{ borderColor: "var(--sf-line)", color: "var(--sf-muted)", background: "rgba(12,15,26,0.5)" }}>
+            {L(
+              { zh: `「${L(openLink, lang)}」为概念链接：此演示站点没有独立子页面，点击仅展开本说明。`, en: `"${L(openLink, lang)}" is a concept link — this demo has no standalone subpages; clicking only opens this note.` },
+              lang
+            )}
+          </p>
+        )}
       </div>
       <div className="mt-10 flex flex-col items-center justify-between gap-2 border-t pt-6 text-[10px] tracking-wider sm:flex-row" style={{ borderColor: "var(--sf-line)", color: "var(--sf-muted)" }}>
         <span>© 2026 STARFALL SAGA · Template demo</span>

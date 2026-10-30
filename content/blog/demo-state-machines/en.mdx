@@ -1,0 +1,82 @@
+---
+title: "Making Demos Pausable and Resettable: State Boundaries Beyond Timers"
+date: "2026-10-29"
+lang: "en"
+summary: "Using the crawler and report demos to examine timer cleanup, stale callback invalidation, honest simulation labels, and CSV escaping without presenting proposed fixes as shipped features."
+tags: ["React", "State Management", "Demo"]
+---
+
+The crawler scheduler and report pipeline look like two different pages: one advances a queue across 24 nodes, while the other lights up five processing stages in sequence. They share the same engineering problem, however. Asynchronous events drive the screen while the user can pause, rerun, or reset at any moment. A state machine therefore involves more than a list of state names; it also defines which callbacks still have the right to modify the current view.
+
+## Treat the View as a Projection of State
+
+Crawler nodes have five states: `undiscovered`, `queued`, `fetching`, `done`, and `blocked`. The queue, active count, and seen-node set live in refs, while React state holds the snapshot used for rendering. Report stages use `pending`, `active`, and `done`, together with `stageIdx` and a progress value.
+
+This does not mean that either demo has already been unified into a single reducer. It offers a way to read the implementation: button availability, node colors, and log counts should all be explainable from the current run's state. Setting `running` to `false` does not automatically bring the queue, timers, and completed callbacks into a consistent state.
+
+## Timer Cleanup Is Only the First Layer
+
+The report demo stores every timeout created by a run in an array and clears them together on rerun, reset, and component unmount. This prevents obvious duplicated progression:
+
+```ts
+const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+function clearTimers() {
+  timers.current.forEach(clearTimeout);
+  timers.current = [];
+}
+
+useEffect(() => () => clearTimers(), []);
+```
+
+The crawler handles its scheduling interval similarly: pause and reset clear it, and unmount cleanup clears it again. Each simulated request, however, also has its own timeout. Holding a reference to one main timer therefore does not make all asynchronous work cancellable. Recursive timeouts, request-completion callbacks, and delayed animations all belong to the lifecycle.
+
+## Pause and Reset Need Different Semantics
+
+Pausing usually stops new work from being dispatched. In the current crawler, simulated requests already in flight still finish and write back their results after a pause. That can reasonably be described as “pausing the scheduler,” but not as freezing the entire world. If the intended semantics require a complete freeze, remaining delays or completion events need separate handling.
+
+Reset is stricter: no callback from an old run should contaminate a new one. The current implementation clears the interval, queue, and counters, but it does not tag independent request callbacks with a run identifier. This is an area that needs hardening, not a problem to describe as solved. Each run can carry a generation that callbacks verify before executing:
+
+```ts
+const generationRef = useRef(0);
+
+function reset() {
+  generationRef.current += 1;
+  // Then clear the interval, queue, active count, and UI state
+}
+
+function scheduleFetch(id: number, ms: number) {
+  const generation = generationRef.current;
+  setTimeout(() => {
+    if (generation !== generationRef.current) return;
+    // Only this run may update activeRef, the queue, and logs
+  }, ms);
+}
+```
+
+Starting an entirely new run must also advance the generation; resuming the same run after a pause must not. Registering and clearing timeouts helps release resources, while generation checks ensure that an old callback has no side effects even if it cannot be cancelled. They solve different problems.
+
+## Copy Must State Exactly What Is Simulated
+
+The crawler does not send requests to real websites. Its site graph is fixed, 429 responses are probabilistic simulations under aggressive settings, and the robots.txt toggle demonstrates scheduling rules. An accurate description is “a scheduling visualizer on a simulated site,” not “a production-grade collector” or “compliant crawling of real websites.”
+
+The report likewise uses built-in file metadata and a fixed summary array. Its stage animation illustrates validation, cleaning, deduplication, merging, and summarization, but it does not read a visitor's file or perform real data cleaning in a backend. The browser does generate and download a file, yet “the downloaded file is real” does not mean “the data was genuinely processed.” Capability copy should explicitly mention built-in samples, simulated results, and browser-side generation rather than using a clickable button to imply a nonexistent backend integration.
+
+## CSV Escaping Is Not Optional
+
+The current export logic interpolates fields directly, while the fixed amounts contain thousands separators such as `45,620.00`. Without quotes, spreadsheet software splits that value into two columns. Quotes and line breaks inside fields cause similar problems. The following is the escaping approach that should be used; it is not a claim that the existing demo already includes it:
+
+```ts
+const cell = (value: string | number) => {
+  const text = String(value);
+  return /[",\r\n]/.test(text)
+    ? `"${text.replace(/"/g, '""')}"`
+    : text;
+};
+
+const csv = "\uFEFF" + rows
+  .map((row) => row.map(cell).join(","))
+  .join("\r\n");
+```
+
+Fields containing commas, double quotes, or line breaks need enclosing double quotes, and each double quote inside a field is written twice. A BOM helps common spreadsheet applications recognize UTF-8 Chinese text, while CRLF is a safer CSV line ending. Exported amounts should preferably remain plain numbers such as `45620.00`, leaving thousands separators to the display layer. Even a small export function needs explicit data boundaries and the same state discipline.

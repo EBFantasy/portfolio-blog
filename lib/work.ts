@@ -2,11 +2,7 @@ import "server-only";
 
 import type { Project } from "@/lib/work-shared";
 
-/**
- * 作品区可见列表：自动化×3 + 功能演示×2 + 小程序×1，共 6 个。
- * 极光电商官网已随网页 Demo 方向一并移除，不再出现在作品卡片里；
- * 电影选座与订阅计费的内容页（详情页）保留且可从各自 playground 的返回按钮进入。
- */
+/** 六个可在浏览器中验证的前端交互原型；不冒充真实客户或生产集成案例。 */
 export const projects: Project[] = [
   {
     slug: "crawler-scheduler",
@@ -15,30 +11,27 @@ export const projects: Project[] = [
     accent: "rose",
     featured: true,
     year: "2026",
-    tags: ["Python", "BFS 调度", "限流应对", "robots 协议"],
-    title: {
-      zh: "爬虫调度可视化系统",
-      en: "Crawler Scheduler Visualizer",
-    },
+    tags: ["TypeScript", "BFS 状态机", "异步调度", "robots 模拟"],
+    title: { zh: "爬虫调度可视化系统", en: "Crawler Scheduler Visualizer" },
     summary: {
-      zh: "广度优先抓取全流程可视化：并发控制、速率限制、链接去重与 robots 协议遵守。",
-      en: "A visual walkthrough of BFS crawling: concurrency, rate limiting, link dedup and robots.txt compliance.",
+      zh: "在 24 页模拟站点图中演示 BFS 队列、并发、延迟、去重、429 与 robots 规则。",
+      en: "A 24-page simulated site graph for exploring BFS queues, concurrency, delays, dedup, 429s and robots rules.",
     },
     description: [
       {
-        zh: "对一个 24 页的模拟站点图执行广度优先抓取：请求队列逐个出队，抓取中的页面高亮脉冲，发现的链接自动入队，重复链接即时去重——整个调度过程逐帧可见，适合向非技术客户解释「爬虫到底在做什么」。",
-        en: "A breadth-first crawl over a 24-page simulated site graph: the request queue dequeues page by page, in-flight pages pulse, discovered links enqueue automatically and duplicates are skipped on sight — the whole scheduling loop visible frame by frame, ideal for explaining crawling to non-technical clients.",
+        zh: "这是一个纯前端调度实验，不访问真实网站。请求队列、在途任务、发现链接与重复过滤都会同步呈现在站点图、日志和统计面板中，用来把抽象的爬虫调度过程变成可以操作的视觉流程。",
+        en: "A front-end scheduling experiment that never visits real websites. The queue, in-flight work, discovered links and duplicate filtering stay synchronized across the graph, log and statistics panel.",
       },
       {
-        zh: "并发数与抓取间隔实时可调，调得太激进会触发模拟 429 限流（页面变红冷却后重试），演示生产级采集器的速率礼仪；robots.txt 开关展示协议遵守：关闭后受限页面会被标记为违规抓取并计数。",
-        en: "Concurrency and delay are live-tunable — set them too aggressively and a simulated 429 rate limit kicks in (pages turn red, cool down and retry), demonstrating production-grade rate etiquette. A robots.txt toggle shows compliance: switch it off and restricted pages get flagged and counted as violations.",
+        zh: "并发与抓取间隔可以调整，过于激进的配置会触发模拟 429；robots 开关用于展示规则遵守与违规计数。暂停、继续和重置共享同一套任务清理逻辑，旧回调不会污染新一轮状态。",
+        en: "Concurrency and delay are adjustable, with simulated 429 responses for aggressive settings. The robots toggle demonstrates compliance and violations. Pause, resume and reset share task-cleanup logic so stale callbacks cannot contaminate a new run.",
       },
     ],
     features: [
-      { zh: "BFS 队列逐帧可视化，去重即时跳过", en: "Frame-by-frame BFS queue with instant dedup" },
-      { zh: "并发与速率实时可调，含 429 限流模拟", en: "Live concurrency/delay with simulated 429s" },
-      { zh: "robots.txt 协议开关与违规计数", en: "robots.txt toggle with violation counter" },
-      { zh: "抓取日志与统计面板实时滚动", en: "Live fetch log and stats panel" },
+      { zh: "BFS 队列与站点图同步可视化", en: "Synchronized BFS queue and site graph" },
+      { zh: "可调并发、延迟与模拟 429", en: "Adjustable concurrency, delay and simulated 429s" },
+      { zh: "robots 规则开关与违规计数", en: "robots toggle with violation counting" },
+      { zh: "可暂停、继续、重置的任务生命周期", en: "Pause, resume and reset across the task lifecycle" },
     ],
     links: { demo: "/playground/crawler" },
   },
@@ -48,30 +41,27 @@ export const projects: Project[] = [
     preview: "browser",
     accent: "amber",
     year: "2026",
-    tags: ["定时任务", "数据可视化", "阈值告警", "SVG 图表"],
-    title: {
-      zh: "电商价格监控仪表盘",
-      en: "E-commerce Price Monitor",
-    },
+    tags: ["TypeScript", "SVG 图表", "阈值告警", "定时任务"],
+    title: { zh: "电商价格监控仪表盘", en: "E-commerce Price Monitor" },
     summary: {
-      zh: "定时采集价格流并实时绘图，跌破阈值即刻告警——比价与监控类需求的完整体验。",
-      en: "Scheduled price streams charted in realtime with threshold alerts — the full front end of a price-tracking need.",
+      zh: "用内置价格流演示定时轮询、实时折线、区间统计与阈值告警。",
+      en: "Built-in price streams demonstrate scheduled polling, live charts, window statistics and threshold alerts.",
     },
     description: [
       {
-        zh: "面向比价与库存监控场景：模拟采集器按固定间隔回报价格，仪表盘实时延伸折线、统计区间最低价与涨跌幅，价格跌破设定阈值的那一刻弹出告警——正是商家「竞品降价第一时间通知我」想要的完整体验。",
-        en: "Built for price-tracking scenarios: a simulated collector reports prices on a fixed interval, the dashboard extends the line chart live and tracks the window low and change rate, and the moment price crosses your threshold an alert fires — exactly the \"ping me when competitors drop prices\" experience merchants ask for.",
+        zh: "三个虚构商品分别使用稳定、震荡和活跃的价格波动模型。仪表盘按固定间隔追加数据，更新折线、最低价和涨跌幅；价格穿过设定阈值时，日志与告警区域同步反馈。",
+        en: "Three fictional products use stable, choppy and active price models. The dashboard appends readings on an interval, updating the chart, window low and change rate, with synchronized logs and threshold alerts.",
       },
       {
-        zh: "三个商品各有独立波动模型（稳定/震荡/活跃），支持一键模拟促销跳水来测试告警链路；采集日志与图表同屏对照，向客户演示「数据从哪来、到哪去」一目了然。",
-        en: "Three products ship with independent volatility models (stable / choppy / active), a one-tap promo-crash button tests the alert path, and the fetch log sits beside the chart so \"where data comes from and where it goes\" is obvious at a glance.",
+        zh: "“模拟促销”与正常轮询调用同一套价格评估逻辑，因此即使暂停采集，也能立即验证告警条件。所有商品与价格均为演示数据，不接真实电商平台。",
+        en: "The promo simulator and normal polling share the same evaluation path, so alert conditions can be tested immediately even while polling is paused. No real commerce platform is connected.",
       },
     ],
     features: [
-      { zh: "定时采集价格流，折线实时延伸", en: "Scheduled price streams, live line chart" },
-      { zh: "阈值告警即时触发并可测试", en: "Instant threshold alerts, testable on demand" },
-      { zh: "三种波动模型一键切换", en: "Three volatility models, one tap away" },
-      { zh: "采集日志与图表同屏对照", en: "Fetch log side-by-side with the chart" },
+      { zh: "三种独立价格波动模型", en: "Three independent price models" },
+      { zh: "实时 SVG 折线与区间统计", en: "Live SVG chart and window statistics" },
+      { zh: "轮询与促销共用阈值判断", en: "Shared threshold logic for polling and promos" },
+      { zh: "可暂停的采集与同步日志", en: "Pausable polling with synchronized logs" },
     ],
     links: { demo: "/playground/monitor" },
   },
@@ -81,30 +71,27 @@ export const projects: Project[] = [
     preview: "browser",
     accent: "sky",
     year: "2026",
-    tags: ["办公自动化", "数据清洗", "Pandas 思想", "CSV 导出"],
-    title: {
-      zh: "多表报表自动化流水线",
-      en: "Multi-Sheet Report Pipeline",
-    },
+    tags: ["TypeScript", "CSV 转义", "流程可视化", "浏览器下载"],
+    title: { zh: "多表报表自动化流水线", en: "Multi-Sheet Report Pipeline" },
     summary: {
-      zh: "三张区域表自动校验、清洗、去重、合并并汇总成报表，全程可视化，产出真实可下载的 CSV。",
-      en: "Three regional sheets validated, cleaned, deduped, merged and summarized on screen — producing a real, downloadable CSV.",
+      zh: "用内置示例数据演示校验、清洗、去重、合并、汇总，并下载正确转义的 CSV。",
+      en: "Built-in sample data demonstrates validation, cleaning, dedup, merging and summaries, with correctly escaped CSV export.",
     },
     description: [
       {
-        zh: "还原最常见办公自动化需求：把多份区域明细表合并成总表。流水线五阶段（校验→清洗→去重→合并→汇总）逐段推进，坏行剔除、格式修复、重复剔除的数量实时跳动，处理逻辑对非技术同事完全透明。",
-        en: "The most requested office automation job, reproduced: merging regional detail sheets into one master. Five pipeline stages (validate → clean → dedupe → merge → summarize) advance one by one while rejected, fixed and deduped counters tick live — the logic is fully transparent to non-technical colleagues.",
+        zh: "这个原型将办公报表处理拆成五个可见阶段。示例数据、坏行数量与汇总结果预先内置，页面重点展示流程编排、阶段反馈和结果呈现，而不是读取用户文件或执行真实 Pandas 任务。",
+        en: "The prototype breaks office reporting into five visible stages. Sample rows, rejected counts and summaries are built in: the focus is orchestration, progress feedback and presentation, not reading user files or running real Pandas jobs.",
       },
       {
-        zh: "跑完后生成按大区汇总的报表，并可一键下载真实 CSV 文件（浏览器端直接生成）——不是截图，是可以立刻拿去用的产物。",
-        en: "When the run finishes, a per-region summary report is generated and downloadable as a real CSV file, produced right in the browser — not a screenshot, an artifact you can use immediately.",
+        zh: "完成后可以在浏览器生成并下载 quarterly-report.csv。导出逻辑对字段引号、千位逗号与换行进行 CSV 转义，并附带 UTF-8 BOM，避免常见表格软件打开后错列或乱码。",
+        en: "The finished run produces quarterly-report.csv in the browser. Export handles quotes, thousands separators and line breaks correctly, with a UTF-8 BOM to reduce misaligned columns and encoding issues in spreadsheet apps.",
       },
     ],
     features: [
-      { zh: "五阶段流水线逐段推进", en: "Five-stage pipeline, stage by stage" },
-      { zh: "坏行剔除与修复计数实时跳动", en: "Live rejected/fixed/deduped counters" },
-      { zh: "按大区自动汇总报表", en: "Automatic per-region summary" },
-      { zh: "一键下载真实 CSV 文件", en: "One-click real CSV download" },
+      { zh: "五阶段流程与明确示例数据边界", en: "Five stages with explicit sample-data boundaries" },
+      { zh: "处理计数与阶段反馈", en: "Processing counters and stage feedback" },
+      { zh: "按区域生成汇总表", en: "Per-region summary table" },
+      { zh: "带 BOM 的正确 CSV 转义下载", en: "Correctly escaped CSV download with BOM" },
     ],
     links: { demo: "/playground/pipeline" },
   },
@@ -115,30 +102,27 @@ export const projects: Project[] = [
     accent: "amber",
     featured: true,
     year: "2026",
-    tags: ["微信小程序", "TDesign", "云开发", "订阅消息"],
-    title: {
-      zh: "茶时 · 点单小程序",
-      en: "Teatime · Ordering Mini Program",
-    },
+    tags: ["React", "小程序交互原型", "规格计价", "本地状态"],
+    title: { zh: "茶时 · 点单交互原型", en: "Teatime · Ordering Prototype" },
     summary: {
-      zh: "茶饮门店点单 + 取餐码核销流程，含规格选择、购物车与订阅消息提醒。",
-      en: "A tea-shop ordering flow with pickup code verification: spec pickers, cart and subscription-message reminders.",
+      zh: "茶饮点单核心流程：温度、甜度、加料、实时计价、购物车与模拟出餐进度。",
+      en: "A tea-ordering flow with temperature, sweetness, toppings, live pricing, cart and simulated kitchen progress.",
     },
     description: [
       {
-        zh: "面向中小茶饮门店的完整点单方案：首页按温度/甜度/加料弹出规格选择浮层，规格组合实时计算价格；下单后生成取餐码，出餐进度通过微信订阅消息推送到用户。",
-        en: "A complete ordering solution for small tea shops: the home screen pops a spec sheet for temperature/sweetness/toppings with live price calculation; after ordering, a pickup code is generated and status updates arrive via WeChat subscription messages.",
+        zh: "以移动端点单为场景的网页高保真原型。每杯饮品可独立选择规格和加料，购物车支持数量调整与清空，结算后生成模拟取餐号并自动推进出餐状态。",
+        en: "A high-fidelity web prototype for mobile ordering. Each drink supports independent options and toppings, the cart handles quantity changes and clearing, and checkout creates a simulated pickup number with automatic kitchen progress.",
       },
       {
-        zh: "后端使用微信云开发（云函数 + 云数据库），免运维且按量计费，适合个体门店成本结构；菜单数据支持商家后台直接增删，改动即时生效无需发版。",
-        en: "The backend uses WeChat CloudBase (cloud functions + cloud database): zero ops, pay-as-you-go, and a cost profile that fits small merchants. Menu data can be edited from the merchant console and takes effect instantly, no release needed.",
+        zh: "当前实现完全在浏览器本地运行，用于评审核心交互和视觉方向；没有接入微信云开发、商家后台、真实支付或订阅消息。将这些能力写入正式项目前，需要另行确认平台与后端范围。",
+        en: "The current implementation runs entirely in the browser for interaction and visual review. It does not integrate WeChat CloudBase, a merchant console, real payments or subscription messages; those require separate platform and backend scoping.",
       },
     ],
     features: [
-      { zh: "规格浮层实时计价，组合无死角", en: "Live-priced spec sheet with full combinations" },
-      { zh: "取餐码 + 出餐进度订阅消息提醒", en: "Pickup code + subscription-message updates" },
-      { zh: "云开发免运维，按量计费", en: "CloudBase: zero ops, pay-as-you-go" },
-      { zh: "商家后台改菜单即时生效", en: "Instant menu updates, no app release" },
+      { zh: "规格组合与实时价格计算", en: "Option combinations with live pricing" },
+      { zh: "购物车数量与合计管理", en: "Cart quantity and total management" },
+      { zh: "模拟支付、取餐号与出餐状态", en: "Mock checkout, pickup number and kitchen states" },
+      { zh: "移动端优先的点单界面", en: "Mobile-first ordering interface" },
     ],
     links: { demo: "/playground/teatime" },
   },
@@ -147,31 +131,29 @@ export const projects: Project[] = [
     category: "playground",
     preview: "browser",
     accent: "rose",
+    featured: true,
     year: "2026",
-    tags: ["React", "状态管理", "交互设计"],
-    title: {
-      zh: "星幕 · 电影院在线选座",
-      en: "StarScreen · Cinema Seat Booking",
-    },
+    tags: ["React", "状态管理", "选座交互"],
+    title: { zh: "星幕 · 电影院在线选座", en: "StarScreen · Cinema Seat Booking" },
     summary: {
-      zh: "电影院选座交互演示：座位图缩放、连座检测、票价分区与订单结算。",
-      en: "A cinema seat-picking demo: zoomable seat map, consecutive-seat detection, price zones and checkout.",
+      zh: "切换场次、选择 VIP 或标准座位、限制单笔数量，并完成模拟结算与出票。",
+      en: "Switch sessions, select VIP or standard seats, enforce order limits and complete a mock checkout.",
     },
     description: [
       {
-        zh: "这是一个交互功能演示：完整实现了影院选座的核心状态机——可售/已售/已锁/选中四种状态流转，选座时自动检测连座（情侣座推荐），超额选择自动提示。",
-        en: "An interactive feature demo implementing the full cinema-booking state machine: available / sold / locked / selected transitions, automatic consecutive-seat detection (couple-seat suggestions), and over-limit guards.",
+        zh: "座位图区分可售、已售、已购与当前选中状态，VIP 和标准区使用不同价格。用户可切换场次、反复选座与取消，结算栏同步汇总座位号、数量和总价。",
+        en: "The seat map distinguishes available, sold, purchased and selected states, with separate VIP and standard pricing. Users can switch sessions, select and deselect seats, and watch the checkout summary update.",
       },
       {
-        zh: "座位图支持双指缩放与拖拽（移动端友好），票价按区域（VIP/普通/后排）分层计算，底部结算栏实时汇总数量与总价——所有状态都在客户端本地流转，可直接作为功能原型给到业务方评审。",
-        en: "The seat map supports pinch-zoom and drag (mobile friendly), prices are tiered by zone (VIP / standard / rear), and the checkout bar aggregates count and total in real time. All state lives client-side, ready to be reviewed as a functional prototype.",
+        zh: "当前版本聚焦选座与模拟支付状态流转，不包含双指缩放、拖拽、连座推荐或独立锁定状态。支付与取票码均为演示，不会产生真实订单。",
+        en: "This version focuses on seat selection and mock checkout. It does not include pinch zoom, dragging, adjacent-seat recommendations or a separate locked state. Payments and pickup codes are simulated.",
       },
     ],
     features: [
-      { zh: "四种座位状态机完整流转", en: "Full 4-state seat machine" },
-      { zh: "连座自动检测与推荐", en: "Consecutive-seat auto detection" },
-      { zh: "分区票价实时结算", en: "Real-time zone-based checkout" },
-      { zh: "触屏缩放拖拽，移动端友好", en: "Pinch-zoom & drag, mobile friendly" },
+      { zh: "可售、已售、已购与选中状态", en: "Available, sold, purchased and selected states" },
+      { zh: "VIP / 标准分区实时计价", en: "Live VIP and standard zone pricing" },
+      { zh: "场次切换与单笔数量限制", en: "Session switching and per-order limits" },
+      { zh: "模拟支付与本地已购记录", en: "Mock payment and local purchase state" },
     ],
     links: { demo: "/playground/cinema" },
   },
@@ -181,40 +163,31 @@ export const projects: Project[] = [
     preview: "browser",
     accent: "sky",
     year: "2026",
-    tags: ["React", "Stripe", "订阅计费"],
-    title: {
-      zh: "订阅付费计划模块",
-      en: "Subscription Pricing Module",
-    },
+    tags: ["React", "订阅界面", "模拟结账"],
+    title: { zh: "订阅付费计划模块", en: "Subscription Pricing Module" },
     summary: {
-      zh: "SaaS 定价页演示：月付/年付切换、功能对比矩阵与 Stripe 结账集成。",
-      en: "A SaaS pricing page demo: monthly/yearly toggle, feature matrix and Stripe checkout integration.",
+      zh: "月付 / 年付切换、三档计划、功能矩阵与不写回服务器的模拟订阅流程。",
+      en: "Monthly/yearly billing, three plans, a feature matrix and a simulated subscription with no server writeback.",
     },
     description: [
       {
-        zh: "演示一个 SaaS 产品的付费计划页：Free / Pro / Team 三档，月付年付一键切换（年付显示折扣角标），功能对比矩阵随滚动吸顶，最贵的 Team 档做了视觉强调引导升级。",
-        en: "A pricing page demo for a SaaS product: Free / Pro / Team tiers, a one-tap monthly/yearly toggle (yearly shows a discount badge), a feature matrix that sticks while scrolling, and visual emphasis on the Team tier to guide upgrades.",
+        zh: "演示 SaaS 定价页的常见决策路径：计费周期切换后同步更新价格与订单摘要，三档计划展示不同功能组合，功能矩阵用于核对差异，选中计划后进入模拟结账。",
+        en: "A typical SaaS pricing decision flow: billing changes update prices and the order summary, three plans expose different feature sets, and a comparison matrix leads into a mock checkout.",
       },
       {
-        zh: "结账链路接入 Stripe Checkout（测试模式），点击升级按钮跳转托管支付页，支付回调后写回用户订阅状态——演示站不保存任何真实支付信息，仅展示完整前后端联调流程。",
-        en: "Checkout hooks into Stripe Checkout (test mode): the upgrade button opens the hosted payment page, and the webhook writes the subscription state back. This demo stores no real payment data — it showcases the complete front/back-end integration flow.",
+        zh: "当前结账只通过本地计时器演示处理中与成功状态，刷新后不会保留订阅。没有接入 Stripe Checkout、Webhook 或真实账户系统，页面不会收集任何支付信息。",
+        en: "Checkout uses a local timer to demonstrate processing and success states; subscriptions do not survive a refresh. Stripe Checkout, webhooks and real accounts are not integrated, and no payment information is collected.",
       },
     ],
     features: [
-      { zh: "月/年付切换，年付折扣角标", en: "Monthly/yearly toggle with discount badge" },
-      { zh: "功能对比矩阵滚动吸顶", en: "Sticky scrolling feature matrix" },
-      { zh: "Stripe Checkout 托管支付页", en: "Stripe Checkout hosted page" },
-      { zh: "支付回调写回订阅状态", en: "Webhook-driven subscription state" },
+      { zh: "月付 / 年付价格联动", en: "Synchronized monthly and yearly pricing" },
+      { zh: "三档计划与功能对比矩阵", en: "Three plans and a feature matrix" },
+      { zh: "订单摘要与计划选择", en: "Order summary and plan selection" },
+      { zh: "本地模拟处理与成功反馈", en: "Local mock processing and success feedback" },
     ],
     links: { demo: "/playground/pricing" },
   },
-]
-
-/**
- * 已完成但被自动化方向替换的作品：不出现在作品卡片列表，
- * 但内容页（详情页）保留且可从各自 playground 的返回按钮进入。
- */
-
+];
 
 export function getAllProjects(): Project[] {
   return projects;

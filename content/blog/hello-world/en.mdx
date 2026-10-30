@@ -1,29 +1,52 @@
 ---
-title: "Hello World: How This Site Was Built"
-date: "2026-09-05"
+title: "Hello, World: The Content and Interaction Boundaries of EBFantasy"
+date: "2026-10-07"
 lang: "en"
-summary: "The first post: tech stack, bilingual architecture and the roadmap, doubling as an acceptance test for the blog pipeline."
+summary: "An opening note on six interactive demos, six explicitly fictional concept UIs, and the technical questions this bilingual site will document."
 tags: ["Next.js", "Web Dev"]
 ---
 
-Welcome to EBFantasy. This first post is both an introduction and an acceptance test: if you can read this well-formatted text, click the tags and see the highlighted code block, the entire Markdown-to-page pipeline is working.
+Welcome to EBFantasy. This site collects web experiments you can operate yourself, alongside notes on the concrete problems encountered while building them. Rather than using the first post as a layout test, it is more useful to explain what is here, what is simulated, and the boundaries the writing will respect.
 
-## Tech Stack
+## Six Interactive Demos
 
-The site is built on **Next.js 15 + TypeScript + Tailwind CSS v4**, deployed to Vercel:
+The work section currently contains six demos. They demonstrate interaction flows and engineering ideas, but they are not all presented as complete products:
 
-- App Router organizes pages as files — adding a section means adding a directory;
-- TypeScript constrains content metadata and component interfaces;
-- Tailwind keeps styling consistent and fast to iterate.
+1. **Crawler Scheduler Visualizer**: runs breadth-first traversal over a fixed, simulated 24-page site graph. You can adjust concurrency and delay, then observe link deduplication, robots.txt blocking, and simulated 429 responses being requeued.
+2. **E-commerce Price Monitor**: uses simulated price streams to drive an SVG line chart, window statistics, and threshold alerts. A manual promotional price drop lets you test how the alert path responds.
+3. **Multi-Sheet Report Pipeline**: walks through validation, cleaning, deduplication, merging, and summarization using three built-in regional samples, then generates a downloadable CSV in the browser. It demonstrates the flow; it does not mean that a visitor's file has been read or cleaned.
+4. **Teatime Ordering**: provides drink customization, live pricing, a cart, ordering, and kitchen-progress interactions in the browser. Payments and order states are part of the demo and do not create real transactions.
+5. **StarScreen Cinema Booking**: offers a zoomable seat map with available, sold, locked, and selected states, plus consecutive-seat detection, zone-based pricing, and a mock checkout.
+6. **Subscription Pricing Module**: includes monthly/yearly switching, a plan comparison matrix, and a checkout interface. It demonstrates billing interactions without storing real payment details or creating a real subscription.
 
-## How Bilingual Routing Works
+These pages make state changes visible. Simulated data is not a shortcoming as long as it is labeled clearly, and a demo should not be described as a real client system or a production integration.
 
-All pages live under the `app/[lang]/` dynamic segment, with separate `zh` / `en` dictionaries and content directories. A middleware redirects prefix-less visits by browser language, producing URLs like `/zh/blog/xxx` and `/en/blog/xxx`.
+## Six Concept UIs, Not Client Case Studies
 
-## What's Next
+The template gallery is separate from the work section. Apex Consulting, Maison Verte, Nexus AI, Pulse Analytics, Starfall Saga, and Neon Arcade explore different visual languages across business, technology, and gaming landing pages: restrained editorial layouts, warm restaurant styling, dark data interfaces, and more atmospheric game visuals.
 
-1. **Phase 2**: web demos, mini program previews and feature showcases;
-2. **Phase 3**: services & pricing page with contact entry;
-3. **Phase 4**: interactive playground and more technical writing.
+All six brands are explicitly fictional. Their promotional figures, testimonials, company histories, and business claims are layout content used to test information hierarchy and component density. They are not real clients, products, or results. These pages answer the question, “How could this kind of interface be organized?” rather than, “Who purchased it?”
 
-Stay tuned.
+## The Stack and Bilingual Content Pipeline
+
+The site uses **Next.js 15, TypeScript, and Tailwind CSS v4**. The App Router organizes routes by directory, `next/image` provides the image component, and client components carry the interactive demos. Articles live in local MDX rather than a database: the directory name is the slug, while `zh.mdx` and `en.mdx` hold the two language versions.
+
+On the server, `gray-matter` reads frontmatter before `remark-parse`, GFM, and `rehype` convert the body to HTML. The minimal metadata contract looks like this:
+
+```yaml
+---
+title: "Post title"
+date: "2026-10-07"
+lang: "en"
+summary: "A short description for the post list"
+tags: ["Next.js", "Web Dev"]
+---
+```
+
+`title` and `date` are required for a post to enter the list; the parser skips files without them. Tags stay short, and the summary describes only what the article actually covers.
+
+## Current Writing Focus
+
+The writing currently focuses on three areas: turning manually layered PSD assets into maintainable web motion, combining timers and state machines in demos that can pause and reset, and drawing an honest line between simulated and real capabilities in interface copy. It also covers details that polished visuals can hide, such as asset cache versions, CSV export, and reduced-motion preferences.
+
+Each Chinese article is written as a complete piece first and then translated into natural English, rather than substituted keyword by keyword. Plans are not presented as accomplishments, and concept pages are not packaged as launched products. Improvements that have not been integrated are explicitly labeled as proposals or gaps. The goal is for every post to leave the reader with a reusable technical judgment, not just a visual effect.

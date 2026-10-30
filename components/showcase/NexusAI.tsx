@@ -590,6 +590,7 @@ function Pipeline({ lang }: { lang: Lang }) {
 /* ================= 异常预警：折线图 + 脉冲点 ================= */
 function Anomaly({ lang }: { lang: Lang }) {
   const [k, setK] = useState(0);
+  const [showRootCause, setShowRootCause] = useState(false);
   const points = "0,170 80,164 160,172 240,158 320,168 400,158 480,166 560,46 640,152 720,158";
   return (
     <section id="nx-alert" className="border-t px-6 py-16 sm:px-10" style={{ borderColor: "var(--nx-line)", background: "var(--nx-bg)" }}>
@@ -645,10 +646,29 @@ function Anomaly({ lang }: { lang: Lang }) {
                   ⚠ {L({ zh: "退款率异常", en: "Refund rate anomaly" }, lang)}
                 </div>
                 <div className="mt-2 text-[11px] leading-relaxed" style={{ color: "var(--nx-muted)" }}>
-                  {L({ zh: "昨天 14:20 超出基线 3.2σ，已自动推送值班群并冻结相关促销规则。", en: "Yesterday 14:20, 3.2σ above baseline. On-call pinged; promo rules auto-frozen." }, lang)}
+                  {L({ zh: "演示事件：昨天 14:20 超出基线 3.2σ。展开查看预设根因与排查建议；未连接真实告警或促销系统。", en: "Demo event: yesterday at 14:20, 3.2σ above baseline. Open the sample analysis; no live alerts or promotion systems are connected." }, lang)}
                 </div>
-                <div className="mt-2.5 text-[11px] font-semibold" style={{ color: "var(--nx-acc2)" }}>
-                  {L({ zh: "查看根因分析 →", en: "Open root-cause analysis →" }, lang)}
+                <button
+                  type="button"
+                  onClick={() => setShowRootCause((open) => !open)}
+                  aria-expanded={showRootCause}
+                  aria-controls="nx-root-cause"
+                  className="mt-2.5 text-left text-[11px] font-semibold transition hover:opacity-75"
+                  style={{ color: "var(--nx-acc2)" }}
+                >
+                  {showRootCause
+                    ? L({ zh: "收起根因分析 ↑", en: "Hide root-cause analysis ↑" }, lang)
+                    : L({ zh: "查看根因分析 →", en: "Open root-cause analysis →" }, lang)}
+                </button>
+                <div aria-live="polite">
+                  {showRootCause && (
+                    <p id="nx-root-cause" className="mt-3 border-t pt-3 text-[11px] leading-relaxed" style={{ borderColor: "rgba(251,113,133,0.25)", color: "var(--nx-fg)" }}>
+                      {L({
+                        zh: "概念推断：满减规则与重复退款重试叠加，导致退款请求被重复计数。建议核对 14:00 的规则版本与退款流水；这里仅展示预设样例，不会执行冻结或推送。",
+                        en: "Concept hypothesis: a discount rule overlapped with repeated refund retries, causing duplicate refund counts. Check the 14:00 rule version against refund records. This sample does not freeze rules or send alerts.",
+                      }, lang)}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -808,12 +828,12 @@ function Cta({ lang }: { lang: Lang }) {
         <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-white/75">
           {L({ zh: "14 天全功能试用，无需绑卡，支持私有化 POC。", en: "14-day full-feature trial, no card required, POC supported." }, lang)}
         </p>
-        <button
-          type="button"
-          className="mt-8 rounded-xl bg-white px-8 py-3.5 text-sm font-semibold text-zinc-900 shadow-lg transition hover:scale-[1.03] active:scale-[0.98]"
+        <a
+          href={`/${lang}/services`}
+          className="mt-8 inline-block rounded-xl bg-white px-8 py-3.5 text-sm font-semibold text-zinc-900 shadow-lg transition hover:scale-[1.03] active:scale-[0.98]"
         >
           {L({ zh: "免费开始", en: "Start for free" }, lang)}
-        </button>
+        </a>
       </Reveal>
     </section>
   );

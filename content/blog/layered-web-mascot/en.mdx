@@ -1,0 +1,63 @@
+---
+title: "Turning PSD Layers into Web 2.5D: A Restrained Mascot Implementation"
+date: "2026-10-18"
+lang: "en"
+summary: "A look at base, wall, iris, lash, and lid layering, fixed eye-socket masks, cursor tracking, asset cache versions, and the current reduced-motion gap."
+tags: ["React", "CSS", "Interaction"]
+---
+
+The mascot in the lower-left corner is neither a video nor a skeletal animation rig. She comes from an illustration manually separated into layers in a PSD. The original hair, eyebrows, and fingers remain intact; only the eye areas that need relative motion are split apart. Here, Web 2.5D does not mean 3D computation. It means using deliberate occlusion, very small iris movements, and brief eyelid closures to give a static image a perceptible sense of depth.
+
+## Establish Layer Order Before Adding Motion
+
+Every part sits in the same container with a `700 / 997` aspect ratio, and its geometry is recorded in percentages. From bottom to top, the order is:
+
+1. **base**: the complete illustration with the eye areas removed and the surrounding skin reconstructed, so no fixed eyeball remains underneath.
+2. **wall**: the left and right sclera and inner eye corners, placed beneath the irises.
+3. **iris**: the left and right irises, the only eye parts that translate directly with the cursor.
+4. **lash**: the eyelashes and eye-line frames, placed above the irises to restore the original linework.
+5. **lid**: the closed-eye pieces, shown only during a blink and covering the open-state wall, iris, and lash layers.
+
+With this order, blinking does not require generating a new illustration. The open-eye parts are hidden while the topmost lids appear, then the state switches back after roughly 160 milliseconds. The body does not rotate toward the cursor. Clicking only opens a speech bubble, while the subtle breathing motion remains separate from eye interaction.
+
+**The wall layer must never contain a second, baked-in eye.** If the original iris remains in the sclera layer, moving the active iris away from the center exposes the static one underneath near the edges, producing double pupils or ghosting. The wall may contain only sclera and the inner socket. Dark pupils and iris highlights that need to move must exist exclusively in the iris layer. Hollowing out the eye area in the base serves the same purpose.
+
+## Keep the Mask Fixed and Move the Iris Inside It
+
+Cursor tracking does not drag the entire eye toward the pointer. The socket window and its mask stay fixed; only the iris inside that window moves. Even when displaced, the iris remains clipped by the manually prepared socket outline instead of sliding onto skin or beyond the eye line.
+
+The current implementation estimates an eye center from the mascot container, converts the pointer vector into an angle, and uses distance to control the displacement:
+
+```ts
+const dx = e.clientX - eyeCenterX;
+const dy = e.clientY - eyeCenterY;
+const dist = Math.hypot(dx, dy);
+const angle = Math.atan2(dy, dx);
+const factor = dist > 0 ? Math.min(dist / 350, 1) : 0;
+
+setEyeOffset({
+  x: Math.cos(angle) * 5.5 * factor,
+  y: Math.sin(angle) * 5.5 * factor,
+});
+```
+
+The maximum displacement is only `5.5px`. That constraint matters: the mascot only needs to acknowledge the cursor, not chase it across the screen. The iris transform has a short ease-out, while the mask sets both `maskImage` and `WebkitMaskImage` at `100% 100%` within the fixed window.
+
+## Version the Related Assets Together
+
+The base, walls, irises, lashes, lids, and masks form one interdependent asset set. Their public image URLs currently share `?v=8`, as in `/oc_iris_l.png?v=8`. The query string provides a manually advanced cache version. Incrementing the whole set after changing the artwork reduces the chance of combining a new iris with an old mask, or loading left and right eyes from different revisions.
+
+A version query does not replace appropriate cache headers, and it does not detect file changes automatically. It is simply a convention for publishing an explicitly new URL. Geometry, masks, and images changed as part of one adjustment should therefore be reviewed as a set rather than replacing a single file in isolation.
+
+## Reduced Motion Remains an Explicit Gap
+
+The component does not currently read `prefers-reduced-motion`, so that capability cannot be claimed as implemented. Proper support involves more than shortening a CSS animation. When a user requests reduced motion, the static character and click-triggered quotes should remain, while breathing, automatic blinking, and cursor tracking stop. A change in the preference should also be observed. At minimum, CSS can remove looping animation and movement transitions:
+
+```css
+@media (prefers-reduced-motion: reduce) {
+  .mascot-body { animation: none; }
+  .iris { transition: none; }
+}
+```
+
+JavaScript must check the same media query before registering `mousemove` or starting blink timers. Otherwise, the transitions disappear while state updates continue in the background. Layering makes this kind of selective control possible: the illustration can stay intact while only its moving layers become still.

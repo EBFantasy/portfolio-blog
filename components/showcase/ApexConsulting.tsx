@@ -501,7 +501,7 @@ function Insights({ lang }: { lang: Lang }) {
       <div className="mt-10 grid gap-4 lg:grid-cols-3">
         {posts.map((p, i) => (
           <Reveal key={p.no} delay={i * 140}>
-            <div className="group h-full cursor-pointer overflow-hidden rounded-2xl border transition-all duration-300 hover:-translate-y-1 hover:shadow-lg" style={{ borderColor: "var(--sk-line)", background: "var(--sk-bg)" }}>
+            <div className="h-full overflow-hidden rounded-2xl border" style={{ borderColor: "var(--sk-line)", background: "var(--sk-bg)" }}>
               <div
                 className="relative flex h-40 items-center justify-center"
                 style={{ background: "linear-gradient(135deg,#1A2440 0%,#2C3E66 60%,#B98A2F 140%)" }}
@@ -510,7 +510,7 @@ function Insights({ lang }: { lang: Lang }) {
                 <span className="absolute bottom-3 right-4 text-[10px] tracking-[0.2em] text-white/60">APEX RESEARCH</span>
               </div>
               <div className="p-5">
-                <div className="text-sm font-semibold leading-snug transition group-hover:underline" style={{ color: "var(--sk-fg)", ...SERIF, textDecorationColor: "var(--sk-acc)" }}>
+                <div className="text-sm font-semibold leading-snug" style={{ color: "var(--sk-fg)", ...SERIF, textDecorationColor: "var(--sk-acc)" }}>
                   {L(p.title, lang)}
                 </div>
                 <div className="mt-2.5 text-[11px]" style={{ color: "var(--sk-muted)" }}>{L(p.date, lang)}</div>
@@ -685,12 +685,12 @@ function CtaBand({ lang }: { lang: Lang }) {
         <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-white/75">
           {L({ zh: "首次诊断会议免费，48 小时内出具初步评估。", en: "First diagnostic session is free; preliminary assessment within 48 hours." }, lang)}
         </p>
-        <button
-          type="button"
-          className="mt-8 rounded-xl bg-white px-8 py-3.5 text-sm font-semibold text-zinc-900 shadow-lg transition hover:scale-[1.03] active:scale-[0.98]"
+        <a
+          href={`/${lang}/services`}
+          className="mt-8 inline-block rounded-xl bg-white px-8 py-3.5 text-sm font-semibold text-zinc-900 shadow-lg transition hover:scale-[1.03] active:scale-[0.98]"
         >
           {L({ zh: "预约顾问", en: "Book a consultant" }, lang)}
-        </button>
+        </a>
       </Reveal>
     </section>
   );

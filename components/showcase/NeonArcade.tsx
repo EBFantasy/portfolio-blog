@@ -37,6 +37,8 @@ type Game = {
   soon?: boolean;
 };
 
+type CartItem = { id: string; title: Bi; price: number; discount: number; qty: number };
+
 const GAMES: Game[] = [
   { id: "starfall", img: "/showcase/starfall/kv.jpg", title: { zh: "星坠战纪", en: "Starfall Saga" }, tags: ["动作", "RPG"], price: 268, discount: 0, review: { zh: "特别好评", en: "Very Positive" }, studio: { zh: "坠落工作室", en: "Falling Studio" } },
   { id: "neon-blade", img: "/showcase/neon/cyber.jpg", title: { zh: "霓虹之刃", en: "Neon Blade" }, tags: ["动作", "赛博朋克"], price: 148, discount: 50, review: { zh: "特别好评", en: "Very Positive" }, studio: { zh: "雨夜互动", en: "Rainy Night Interactive" } },
@@ -69,7 +71,7 @@ const TAG_BI: Record<string, Bi> = {
   "DLC": { zh: "DLC", en: "DLC" },
 };
 
-const finalPrice = (g: Game) => Math.round((g.price * (100 - g.discount)) / 100);
+const finalPrice = (g: { price: number; discount: number }) => Math.round((g.price * (100 - g.discount)) / 100);
 
 export default function NeonArcade({ lang, backHref, backLabel }: { lang: Lang; backHref: string; backLabel: string }) {
   const store = useStore();
@@ -104,15 +106,17 @@ export default function NeonArcade({ lang, backHref, backLabel }: { lang: Lang; 
         <TabbedRows lang={lang} store={store} />
         <Catalog lang={lang} store={store} />
         <Footer lang={lang} />
-        {store.toast && (
-          <div
-            key={store.toast}
-            className="fixed bottom-6 right-6 z-50 rounded px-4 py-3 text-xs font-semibold shadow-2xl"
-            style={{ background: "#2E2540", color: "var(--na-bright)", border: "1px solid var(--na-acc)", animation: "na-toast 2.2s ease both" }}
-          >
-            ✓ {L({ zh: "已加入购物车", en: "Added to cart" }, lang)}：{store.toast}
-          </div>
-        )}
+        <div aria-live="polite" className="fixed bottom-6 right-6 z-50">
+          {store.toast && (
+            <div
+              key={store.toast.id}
+              className="rounded px-4 py-3 text-xs font-semibold shadow-2xl"
+              style={{ background: "#2E2540", color: "var(--na-bright)", border: "1px solid var(--na-acc)", animation: "na-toast 2.2s ease both" }}
+            >
+              {store.toast.text}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -122,24 +126,39 @@ export default function NeonArcade({ lang, backHref, backLabel }: { lang: Lang; 
 function useStore() {
   const [query, setQuery] = useState("");
   const [tag, setTag] = useState("全部");
-  const [cart, setCart] = useState(0);
-  const [toast, setToast] = useState<string | null>(null);
+  const [items, setItems] = useState<CartItem[]>([]);
+  const [cartOpen, setCartOpen] = useState(false);
+  const [toast, setToast] = useState<{ id: number; text: string } | null>(null);
+  const toastSeq = useRef(0);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const addToCart = (title: Bi, lang: Lang) => {
-    setCart((c) => c + 1);
-    setToast(L(title, lang));
+  const showToast = (text: string) => {
+    toastSeq.current += 1;
+    setToast({ id: toastSeq.current, text });
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(() => setToast(null), 2200);
   };
+  const addToCart = (g: Game, lang: Lang) => {
+    setItems((list) => {
+      const hit = list.find((x) => x.id === g.id);
+      if (hit) return list.map((x) => (x.id === g.id ? { ...x, qty: x.qty + 1 } : x));
+      return [...list, { id: g.id, title: g.title, price: g.price, discount: g.discount, qty: 1 }];
+    });
+    showToast(`✓ ${L({ zh: "已加入购物车", en: "Added to cart" }, lang)}：${L(g.title, lang)}`);
+  };
+  const clearCart = (lang: Lang) => {
+    setItems([]);
+    showToast(`✓ ${L({ zh: "购物车已清空", en: "Cart cleared" }, lang)}`);
+  };
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
-  return { query, setQuery, tag, setTag, cart, addToCart, toast };
+  const count = items.reduce((n, x) => n + x.qty, 0);
+  return { query, setQuery, tag, setTag, items, count, cartOpen, setCartOpen, addToCart, clearCart, toast };
 }
 
 /* ================= 顶栏 ================= */
 function StoreHeader({ lang, store }: { lang: Lang; store: ReturnType<typeof useStore> }) {
   return (
-    <header style={{ background: "var(--na-deep)" }}>
-      <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-5 py-3">
+    <header id="na-top" className="relative" style={{ background: "var(--na-deep)" }}>
+      <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-4 gap-y-2 px-5 py-3">
         <a href="#na-top" className="flex items-baseline gap-2">
           <span className="text-base font-black tracking-widest" style={{ color: "var(--na-pink)" }}>NEON</span>
           <span className="text-base font-black tracking-widest" style={{ color: "var(--na-violet)" }}>ARCADE</span>
@@ -147,31 +166,106 @@ function StoreHeader({ lang, store }: { lang: Lang; store: ReturnType<typeof use
             {L({ zh: "霓虹街机", en: "霓虹街机" }, lang)}
           </span>
         </a>
-        <div className="flex flex-1 items-center justify-end gap-3">
+        <div className="flex flex-1 flex-wrap items-center justify-end gap-3">
           <input
             value={store.query}
             onChange={(e) => store.setQuery(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") document.getElementById("na-catalog")?.scrollIntoView({ behavior: "smooth", block: "start" }); }}
             placeholder={L({ zh: "搜索游戏…", en: "Search games…" }, lang)}
+            aria-label={L({ zh: "搜索游戏", en: "Search games" }, lang)}
             className="na-input w-40 rounded px-3 py-1.5 text-xs sm:w-56"
           />
-          <span className="relative flex h-8 w-8 items-center justify-center rounded" style={{ background: "rgba(255,255,255,0.06)" }}>
+          <button
+            type="button"
+            aria-label={L({ zh: "购物车", en: "Cart" }, lang)}
+            aria-expanded={store.cartOpen}
+            aria-controls="na-cart-drawer"
+            onClick={() => store.setCartOpen(!store.cartOpen)}
+            className="relative flex h-8 w-8 items-center justify-center rounded transition hover:bg-white/10"
+            style={{ background: "rgba(255,255,255,0.06)" }}
+          >
             <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="var(--na-fg)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
               <path d="M4 5h2l2.2 10.5a1.5 1.5 0 0 0 1.5 1.2h7.6a1.5 1.5 0 0 0 1.5-1.2L20.5 8H7" />
               <circle cx="10.5" cy="20" r="1.2" /><circle cx="17.5" cy="20" r="1.2" />
             </svg>
-            {store.cart > 0 && (
+            {store.count > 0 && (
               <span
-                key={store.cart}
+                key={store.count}
                 className="absolute -right-1.5 -top-1.5 flex h-4.5 min-w-4.5 items-center justify-center rounded-full px-1 text-[9px] font-bold text-black"
                 style={{ background: "var(--na-pink)", animation: "na-pop .4s ease", height: 18, minWidth: 18 }}
               >
-                {store.cart}
+                {store.count}
               </span>
             )}
-          </span>
+          </button>
         </div>
       </div>
+      {/* 购物车明细抽屉（本地状态，可清空） */}
+      {store.cartOpen && (
+        <div
+          id="na-cart-drawer"
+          className="absolute right-5 top-full z-40 w-80 rounded-b-xl border p-4 shadow-2xl"
+          style={{ background: "#2E2540", borderColor: "var(--na-acc)" }}
+        >
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs font-bold tracking-widest" style={{ color: "var(--na-bright)" }}>
+              {L({ zh: "购物车明细", en: "Cart details" }, lang)}
+            </span>
+            <button
+              type="button"
+              onClick={() => store.setCartOpen(false)}
+              aria-label={L({ zh: "关闭购物车", en: "Close cart" }, lang)}
+              className="flex h-6 w-6 items-center justify-center rounded text-xs font-bold transition hover:bg-white/10"
+              style={{ color: "var(--na-muted)" }}
+            >
+              ×
+            </button>
+          </div>
+          {store.items.length === 0 ? (
+            <p className="mt-3 text-[11px] leading-relaxed" style={{ color: "var(--na-muted)" }}>
+              {L({ zh: "购物车是空的——从下方列表添加概念商品。", en: "Cart is empty — add concept items from the lists below." }, lang)}
+            </p>
+          ) : (
+            <div aria-live="polite">
+              <ul className="mt-3 max-h-56 space-y-2 overflow-y-auto">
+                {store.items.map((it) => (
+                  <li key={it.id} className="flex items-center justify-between gap-2 text-[11px]">
+                    <span className="min-w-0 flex-1 truncate" style={{ color: "var(--na-fg)" }}>{L(it.title, lang)} ×{it.qty}</span>
+                    <span className="shrink-0 font-semibold" style={{ color: "var(--na-sale)", ...MONO }}>¥{finalPrice(it) * it.qty}</span>
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-3 flex items-center justify-between border-t pt-3 text-[11px]" style={{ borderColor: "var(--na-line)" }}>
+                <span style={{ color: "var(--na-muted)" }}>{L({ zh: "合计（概念价）", en: "Total (concept)" }, lang)}</span>
+                <span className="font-bold" style={{ color: "var(--na-sale)", ...MONO }}>
+                  ¥{store.items.reduce((n, x) => n + finalPrice(x) * x.qty, 0)}
+                </span>
+              </div>
+            </div>
+          )}
+          <div className="mt-3 flex gap-2">
+            <button
+              type="button"
+              onClick={() => store.clearCart(lang)}
+              className="flex-1 rounded px-3 py-1.5 text-[10px] font-bold text-white transition hover:brightness-125 active:scale-95"
+              style={{ background: "linear-gradient(180deg,#FF5C8A,#C2255C)" }}
+            >
+              {L({ zh: "清空购物车", en: "Clear cart" }, lang)}
+            </button>
+            <button
+              type="button"
+              onClick={() => store.setCartOpen(false)}
+              className="flex-1 rounded border px-3 py-1.5 text-[10px] font-bold transition hover:bg-white/10"
+              style={{ borderColor: "var(--na-line)", color: "var(--na-fg)" }}
+            >
+              {L({ zh: "关闭", en: "Close" }, lang)}
+            </button>
+          </div>
+          <p className="mt-2 text-[9px] leading-relaxed" style={{ color: "var(--na-muted)" }}>
+            {L({ zh: "概念演示：购物车仅保留在本页，不会下单或付款。", en: "Concept demo: the cart is local to this page — no orders or payments." }, lang)}
+          </p>
+        </div>
+      )}
     </header>
   );
 }
@@ -187,12 +281,12 @@ function StoreNav({ lang, store }: { lang: Lang; store: ReturnType<typeof useSto
   ];
   return (
     <nav className="border-y" style={{ borderColor: "rgba(0,0,0,0.35)", background: "linear-gradient(180deg, rgba(58,48,80,0.35), rgba(25,21,34,0))" }}>
-      <div className="mx-auto flex max-w-5xl items-center gap-6 overflow-x-auto px-5 py-2.5 text-xs">
+      <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-6 gap-y-2 px-5 py-2.5 text-xs">
         {items.map(([label, href]) => (
           <a key={href} href={href} className="na-link whitespace-nowrap font-medium">{L(label, lang)}</a>
         ))}
         <span className="ml-auto hidden shrink-0 text-[10px] sm:inline" style={{ color: "var(--na-muted)", ...MONO }}>
-          {L({ zh: `购物车（${store.cart}）`, en: `CART (${store.cart})` }, lang)}
+          {L({ zh: `购物车（${store.count}）`, en: `CART (${store.count})` }, lang)}
         </span>
       </div>
     </nav>
@@ -232,7 +326,7 @@ function Featured({ lang, store }: { lang: Lang; store: ReturnType<typeof useSto
           {/* 箭头 */}
           <button
             type="button"
-            aria-label="prev"
+            aria-label={L({ zh: "上一张", en: "Previous slide" }, lang)}
             onClick={() => setIdx((i) => (i - 1 + FEATURED.length) % FEATURED.length)}
             className="absolute left-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-lg font-bold text-white transition hover:bg-black/50"
             style={{ background: "rgba(0,0,0,0.3)" }}
@@ -241,7 +335,7 @@ function Featured({ lang, store }: { lang: Lang; store: ReturnType<typeof useSto
           </button>
           <button
             type="button"
-            aria-label="next"
+            aria-label={L({ zh: "下一张", en: "Next slide" }, lang)}
             onClick={() => setIdx((i) => (i + 1) % FEATURED.length)}
             className="absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-lg font-bold text-white transition hover:bg-black/50"
             style={{ background: "rgba(0,0,0,0.3)" }}
@@ -254,7 +348,7 @@ function Featured({ lang, store }: { lang: Lang; store: ReturnType<typeof useSto
               <button
                 key={x.id}
                 type="button"
-                aria-label={`slide ${i + 1}`}
+                aria-label={L({ zh: `第 ${i + 1} 张`, en: `Slide ${i + 1}` }, lang)}
                 onClick={() => setIdx(i)}
                 className="h-1.5 rounded-full transition-all duration-300"
                 style={{ width: i === idx ? 22 : 8, background: i === idx ? "var(--na-acc)" : "rgba(255,255,255,0.4)" }}
@@ -290,7 +384,8 @@ function Featured({ lang, store }: { lang: Lang; store: ReturnType<typeof useSto
             <PriceTag g={g} />
             <button
               type="button"
-              onClick={() => store.addToCart(g.title, lang)}
+              onClick={() => store.addToCart(g, lang)}
+              aria-label={`${L({ zh: "加入购物车", en: "Add to cart" }, lang)}：${L(g.title, lang)}`}
               className="rounded px-4 py-2 text-xs font-bold text-white transition hover:brightness-125 active:scale-95"
               style={{ background: "linear-gradient(180deg,#FF5C8A,#C2255C)" }}
             >
@@ -303,40 +398,17 @@ function Featured({ lang, store }: { lang: Lang; store: ReturnType<typeof useSto
   );
 }
 
-/* ================= 每日特惠（倒计时） ================= */
-function useMidnightCountdown() {
-  const [left, setLeft] = useState("--:--:--");
-  useEffect(() => {
-    const calc = () => {
-      const now = new Date();
-      const end = new Date(now);
-      end.setHours(23, 59, 59, 999);
-      const d = Math.max(0, end.getTime() - now.getTime());
-      const h = Math.floor(d / 3.6e6);
-      const m = Math.floor((d % 3.6e6) / 6e4);
-      const sec = Math.floor((d % 6e4) / 1e3);
-      setLeft(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`);
-    };
-    calc();
-    const id = setInterval(calc, 1000);
-    return () => clearInterval(id);
-  }, []);
-  return left;
-}
-
+/* ================= 本期概念精选（静态，无倒计时） ================= */
 function DailyDeal({ lang, store }: { lang: Lang; store: ReturnType<typeof useStore> }) {
-  const left = useMidnightCountdown();
-  const g = GAMES[1]; // 霓虹之刃
   return (
     <section id="na-deals" className="mx-auto max-w-5xl px-5 pt-10">
       <Reveal dir="left">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-sm font-bold uppercase tracking-widest" style={{ color: "var(--na-fg)" }}>
             {L({ zh: "特别优惠", en: "Special Offers" }, lang)}
           </h2>
           <span className="text-[11px]" style={{ color: "var(--na-muted)" }}>
-            {L({ zh: "每日特惠倒计时", en: "Daily deal ends in" }, lang)}{" "}
-            <b style={{ color: "var(--na-sale)", ...MONO }}>{left}</b>
+            {L({ zh: "本期概念精选", en: "Featured concept picks" }, lang)}
           </span>
         </div>
       </Reveal>
@@ -349,7 +421,7 @@ function DailyDeal({ lang, store }: { lang: Lang; store: ReturnType<typeof useSt
                 <img src={g.img} alt={g.title.en} className="h-full w-full object-cover" />
                 {g.id === "neon-blade" && (
                   <span className="absolute left-2 top-2 rounded px-2 py-0.5 text-[10px] font-bold text-black" style={{ background: "var(--na-pink)" }}>
-                    {L({ zh: "每日特惠", en: "DAILY DEAL" }, lang)}
+                    {L({ zh: "本期精选", en: "FEATURED PICK" }, lang)}
                   </span>
                 )}
               </div>
@@ -362,7 +434,8 @@ function DailyDeal({ lang, store }: { lang: Lang; store: ReturnType<typeof useSt
                 </div>
                 <button
                   type="button"
-                  onClick={() => store.addToCart(g.title, lang)}
+                  onClick={() => store.addToCart(g, lang)}
+                  aria-label={`${L({ zh: "加入购物车", en: "Add to cart" }, lang)}：${L(g.title, lang)}`}
                   className="shrink-0 rounded px-2.5 py-1.5 text-[10px] font-bold text-white transition hover:brightness-125 active:scale-95"
                   style={{ background: "linear-gradient(180deg,#FF5C8A,#C2255C)" }}
                 >
@@ -423,8 +496,8 @@ function TabbedRows({ lang, store }: { lang: Lang; store: ReturnType<typeof useS
   const games = row.ids.map((id) => GAMES.find((g) => g.id === id)).filter(Boolean) as Game[];
   return (
     <section id="na-rows" className="mx-auto max-w-5xl px-5 pt-10">
-      <div className="flex items-end justify-between gap-4">
-        <div className="flex gap-1">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="flex flex-wrap gap-1">
           {ROWS.map((r, i) => (
             <button
               key={r.id}
@@ -459,7 +532,8 @@ function TabbedRows({ lang, store }: { lang: Lang; store: ReturnType<typeof useS
               </div>
               <button
                 type="button"
-                onClick={() => store.addToCart(g.title, lang)}
+                onClick={() => store.addToCart(g, lang)}
+                aria-label={`${L({ zh: "加入购物车", en: "Add to cart" }, lang)}：${L(g.title, lang)}`}
                 className="shrink-0 rounded px-2.5 py-1.5 text-[10px] font-bold text-white transition hover:brightness-125 active:scale-95"
                 style={{ background: "linear-gradient(180deg,#FF5C8A,#C2255C)" }}
               >
@@ -497,6 +571,7 @@ function Catalog({ lang, store }: { lang: Lang; store: ReturnType<typeof useStor
           value={store.query}
           onChange={(e) => store.setQuery(e.target.value)}
           placeholder={L({ zh: "输入名称 / 工作室 / 标签…", en: "Title / studio / tag…" }, lang)}
+          aria-label={L({ zh: "搜索全部游戏", en: "Search all games" }, lang)}
           className="na-input w-full rounded px-3 py-2 text-xs sm:w-72"
         />
       </div>
@@ -533,7 +608,8 @@ function Catalog({ lang, store }: { lang: Lang; store: ReturnType<typeof useStor
                   <PriceTag g={g} compact />
                   <button
                     type="button"
-                    onClick={() => store.addToCart(g.title, lang)}
+                    onClick={() => store.addToCart(g, lang)}
+                    aria-label={`${L({ zh: "加入购物车", en: "Add to cart" }, lang)}：${L(g.title, lang)}`}
                     className="shrink-0 rounded px-3 py-1.5 text-[10px] font-bold text-white transition hover:brightness-125 active:scale-95"
                     style={{ background: "linear-gradient(180deg,#FF5C8A,#C2255C)" }}
                   >

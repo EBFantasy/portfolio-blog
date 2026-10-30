@@ -148,12 +148,12 @@ export default function ShowcaseTemplatePage({
         >
           <h2 className="text-2xl font-bold text-white sm:text-3xl">{L(t.ctaTitle)}</h2>
           <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-white/75">{L(t.ctaDesc)}</p>
-          <button
-            type="button"
-            className="mt-7 rounded-xl bg-white px-7 py-3 text-sm font-semibold text-zinc-900 shadow-lg transition hover:scale-[1.03] active:scale-[0.98]"
+          <a
+            href={`/${lang}/services`}
+            className="mt-7 inline-block rounded-xl bg-white px-7 py-3 text-sm font-semibold text-zinc-900 shadow-lg transition hover:scale-[1.03] active:scale-[0.98]"
           >
             {L(t.ctaPrimary)}
-          </button>
+          </a>
         </section>
 
         {/* 模板自有页脚 */}

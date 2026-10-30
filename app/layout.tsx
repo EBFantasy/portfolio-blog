@@ -4,16 +4,10 @@ import { SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: {
-    default: "EBFantasy · 软件工程师作品集与博客",
-    template: "%s · EBFantasy",
-  },
-  description:
-    "软件工程师个人站：网页开发 Demo、微信小程序预览、功能演示与技术博客。",
 };
 
-// 在页面 hydration 前根据 localStorage / 系统偏好挂载主题，避免闪烁
-const themeInit = `(function(){try{var t=localStorage.getItem("theme");var d=window.matchMedia("(prefers-color-scheme: dark)").matches;if(t==="dark"||(!t&&d)){document.documentElement.classList.add("dark")}}catch(e){}})();`;
+// 在 hydration 前同步语言与主题，避免语言属性和配色闪烁。
+const earlyInit = `(function(){var p=window.location.pathname;document.documentElement.lang=p==="/en"||p.indexOf("/en/")===0?"en":"zh";try{var t=localStorage.getItem("theme");var d=window.matchMedia("(prefers-color-scheme: dark)").matches;if(t==="dark"||(!t&&d)){document.documentElement.classList.add("dark")}}catch(e){}})();`;
 
 export default function RootLayout({
   children,
@@ -23,7 +17,7 @@ export default function RootLayout({
   return (
     <html lang="zh" suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: themeInit }} />
+        <script dangerouslySetInnerHTML={{ __html: earlyInit }} />
       </head>
       <body className="min-h-screen antialiased">{children}</body>
     </html>

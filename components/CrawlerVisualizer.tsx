@@ -67,7 +67,7 @@ export default function CrawlerVisualizer({ lang, backHref, backLabel }: { lang:
   const [concurrency, setConcurrency] = useState(2);
   const [delay, setDelay] = useState(600);
   const [robots, setRobots] = useState(true);
-  const [stats, setStats] = useState({ fetched: 1, queued: 1, dup: 0, blocked: 0, violations: 0, hits429: 0 });
+  const [stats, setStats] = useState({ fetched: 0, queued: 1, dup: 0, blocked: 0, violations: 0, hits429: 0 });
   const [logs, setLogs] = useState<{ t: string; bad?: boolean }[]>([
     { t: L({ zh: "就绪。robots.txt 已加载（2 条 Disallow）。点击「开始抓取」。", en: "Ready. robots.txt loaded (2 Disallow rules). Press Start." }, lang) },
   ]);
@@ -76,13 +76,15 @@ export default function CrawlerVisualizer({ lang, backHref, backLabel }: { lang:
   const queueRef = useRef<number[]>([0]);
   const seenRef = useRef<Set<number>>(new Set([0]));
   const activeRef = useRef(0);
+  const activeIdsRef = useRef<Set<number>>(new Set());
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const statsRef = useRef(stats);
+  const timeoutsRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
+  const generationRef = useRef(0);
+  const tickRef = useRef<() => void>(() => {});
   const runningRef = useRef(false);
   const robotsRef = useRef(true);
   const concRef = useRef(concurrency);
   const delayRef = useRef(delay);
-  statsRef.current = stats;
   runningRef.current = running;
   robotsRef.current = robots;
   concRef.current = concurrency;
@@ -92,14 +94,27 @@ export default function CrawlerVisualizer({ lang, backHref, backLabel }: { lang:
     setLogs((ls) => [...ls.slice(-7), { t: line, bad }]);
   };
 
-  const reset = () => {
+  const clearTimers = () => {
     if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = null;
+    timeoutsRef.current.forEach(clearTimeout);
+    timeoutsRef.current.clear();
+  };
+
+  const syncQueued = () => {
+    setStats((st) => ({ ...st, queued: queueRef.current.length }));
+  };
+
+  const reset = () => {
+    runningRef.current = false;
+    generationRef.current += 1;
+    clearTimers();
     queueRef.current = [0];
     seenRef.current = new Set([0]);
     activeRef.current = 0;
+    activeIdsRef.current.clear();
     setStatus(initStatus());
-    setStats({ fetched: 1, queued: 1, dup: 0, blocked: 0, violations: 0, hits429: 0 });
+    setStats({ fetched: 0, queued: 1, dup: 0, blocked: 0, violations: 0, hits429: 0 });
     setRunning(false);
     setFinished(false);
     setLogs([{ t: L({ zh: "已重置。站点图恢复初始状态。", en: "Reset. Site graph restored." }, lang) }]);
@@ -107,78 +122,117 @@ export default function CrawlerVisualizer({ lang, backHref, backLabel }: { lang:
 
   const start = () => {
     if (runningRef.current || finished) return;
+    generationRef.current += 1;
+    runningRef.current = true;
     setRunning(true);
-    timerRef.current = setInterval(() => {
-      const conc = concRef.current;
-      let budget = conc - activeRef.current;
-      while (budget > 0 && queueRef.current.length > 0) {
-        const id = queueRef.current.shift()!;
-        // robots 拦截：出队时发现是受限页
-        if (robotsRef.current && BLOCKED.has(id)) {
-          setStatus((st) => st.map((v, i) => (i === id ? "blocked" : v)));
-          setStats((st) => ({ ...st, blocked: st.blocked + 1 }));
-          log(`SKIP ${url(id)} → ${L({ zh: "robots 禁止", en: "disallowed by robots" }, lang)}`, true);
-          budget -= 1;
-          continue;
-        }
-        budget -= 1;
-        activeRef.current += 1;
-        setStatus((st) => st.map((v, i) => (i === id ? "fetching" : v)));
-        const ms = 300 + ((id * 97) % 260);
-        setTimeout(() => {
-          activeRef.current -= 1;
-          // 429 模拟：激进配置下有概率被限流
-          if (delayRef.current <= 400 && concRef.current >= 3 && Math.random() < 0.28) {
-            queueRef.current.unshift(id);
-            setStatus((st) => st.map((v, i) => (i === id ? "queued" : v)));
-            setStats((st) => ({ ...st, hits429: st.hits429 + 1 }));
-            log(`GET ${url(id)} → 429 ${L({ zh: "触发限流，重新排队", en: "rate-limited, requeued" }, lang)}`, true);
-            return;
-          }
-          const links = NEIGHBORS[id].length;
-          setStatus((st) => st.map((v, i) => (i === id ? "done" : v)));
-          let newLinks = 0;
-          for (const nb of NEIGHBORS[id]) {
-            if (seenRef.current.has(nb)) {
-              setStats((st) => ({ ...st, dup: st.dup + 1 }));
-              continue;
-            }
-            seenRef.current.add(nb);
-            // robots 开启时，受限页在发现阶段即拦截
-            if (robotsRef.current && BLOCKED.has(nb)) {
-              setStatus((st) => st.map((v, i) => (i === nb ? "blocked" : v)));
-              setStats((st) => ({ ...st, blocked: st.blocked + 1 }));
-              continue;
-            }
-            queueRef.current.push(nb);
-            setStatus((st) => st.map((v, i) => (i === nb ? "queued" : v)));
-            newLinks += 1;
-          }
-          if (!robotsRef.current && BLOCKED.has(id)) {
-            setStats((st) => ({ ...st, violations: st.violations + 1 }));
-            log(`GET ${url(id)} → 200 · ${links} ${L({ zh: "链接", en: "links" }, lang)} · ⚠ ${L({ zh: "违规抓取", en: "VIOLATION" }, lang)}`, true);
-          } else {
-            log(`GET ${url(id)} → 200 · ${links} ${L({ zh: "链接", en: "links" }, lang)} · ${ms}ms`);
-          }
-          setStats((st) => ({ ...st, fetched: st.fetched + 1, queued: queueRef.current.length }));
-        }, ms);
-      }
-      if (queueRef.current.length === 0 && activeRef.current === 0) {
-        if (timerRef.current) clearInterval(timerRef.current);
-        timerRef.current = null;
-        setRunning(false);
-        setFinished(true);
-      }
-    }, delayRef.current);
   };
 
   const pause = () => {
-    if (timerRef.current) clearInterval(timerRef.current);
-    timerRef.current = null;
+    const pending = new Set(activeIdsRef.current);
+    runningRef.current = false;
+    generationRef.current += 1;
+    clearTimers();
+    if (pending.size > 0) {
+      queueRef.current = [...pending, ...queueRef.current];
+      setStatus((st) => st.map((v, i) => (pending.has(i) && v === "fetching" ? "queued" : v)));
+    }
+    activeIdsRef.current.clear();
+    activeRef.current = 0;
+    syncQueued();
     setRunning(false);
   };
 
-  useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
+  const tick = () => {
+    if (!runningRef.current) return;
+    const conc = concRef.current;
+    let budget = Math.max(0, conc - activeRef.current);
+    while (budget > 0 && queueRef.current.length > 0) {
+      const id = queueRef.current.shift()!;
+      syncQueued();
+      // robots 拦截：出队时发现是受限页
+      if (robotsRef.current && BLOCKED.has(id)) {
+        setStatus((st) => st.map((v, i) => (i === id ? "blocked" : v)));
+        setStats((st) => ({ ...st, blocked: st.blocked + 1 }));
+        log(`SKIP ${url(id)} → ${L({ zh: "robots 禁止", en: "disallowed by robots" }, lang)}`, true);
+        budget -= 1;
+        continue;
+      }
+      budget -= 1;
+      activeRef.current += 1;
+      activeIdsRef.current.add(id);
+      setStatus((st) => st.map((v, i) => (i === id ? "fetching" : v)));
+      const ms = 300 + ((id * 97) % 260);
+      const generation = generationRef.current;
+      const timeout = setTimeout(() => {
+        timeoutsRef.current.delete(timeout);
+        if (generation !== generationRef.current || !runningRef.current) return;
+        activeIdsRef.current.delete(id);
+        activeRef.current = Math.max(0, activeRef.current - 1);
+        // 429 模拟：激进配置下有概率被限流
+        if (delayRef.current <= 400 && concRef.current >= 3 && Math.random() < 0.28) {
+          queueRef.current.unshift(id);
+          syncQueued();
+          setStatus((st) => st.map((v, i) => (i === id ? "queued" : v)));
+          setStats((st) => ({ ...st, hits429: st.hits429 + 1 }));
+          log(`GET ${url(id)} → 429 ${L({ zh: "触发限流，重新排队", en: "rate-limited, requeued" }, lang)}`, true);
+          return;
+        }
+        const links = NEIGHBORS[id].length;
+        setStatus((st) => st.map((v, i) => (i === id ? "done" : v)));
+        let newLinks = 0;
+        for (const nb of NEIGHBORS[id]) {
+          if (seenRef.current.has(nb)) {
+            setStats((st) => ({ ...st, dup: st.dup + 1 }));
+            continue;
+          }
+          seenRef.current.add(nb);
+          // robots 开启时，受限页在发现阶段即拦截
+          if (robotsRef.current && BLOCKED.has(nb)) {
+            setStatus((st) => st.map((v, i) => (i === nb ? "blocked" : v)));
+            setStats((st) => ({ ...st, blocked: st.blocked + 1 }));
+            continue;
+          }
+          queueRef.current.push(nb);
+          setStatus((st) => st.map((v, i) => (i === nb ? "queued" : v)));
+          newLinks += 1;
+        }
+        if (!robotsRef.current && BLOCKED.has(id)) {
+          setStats((st) => ({ ...st, violations: st.violations + 1 }));
+          log(`GET ${url(id)} → 200 · ${links} ${L({ zh: "链接", en: "links" }, lang)} · ⚠ ${L({ zh: "违规抓取", en: "VIOLATION" }, lang)}`, true);
+        } else {
+          log(`GET ${url(id)} → 200 · ${links} ${L({ zh: "链接", en: "links" }, lang)} · ${ms}ms`);
+        }
+        setStats((st) => ({ ...st, fetched: st.fetched + 1, queued: queueRef.current.length }));
+      }, ms);
+      timeoutsRef.current.add(timeout);
+    }
+    if (queueRef.current.length === 0 && activeRef.current === 0) {
+      if (timerRef.current) clearInterval(timerRef.current);
+      timerRef.current = null;
+      runningRef.current = false;
+      setRunning(false);
+      setFinished(true);
+    }
+  };
+  tickRef.current = tick;
+
+  useEffect(() => {
+    if (!running) return;
+    const id = setInterval(() => tickRef.current(), delay);
+    timerRef.current = id;
+    return () => {
+      clearInterval(id);
+      if (timerRef.current === id) timerRef.current = null;
+    };
+  }, [running, delay]);
+
+  useEffect(() => () => {
+    runningRef.current = false;
+    generationRef.current += 1;
+    clearTimers();
+    activeIdsRef.current.clear();
+    activeRef.current = 0;
+  }, []);
 
   const nodeColor = (st: NodeStatus): string => {
     switch (st) {
@@ -232,7 +286,7 @@ export default function CrawlerVisualizer({ lang, backHref, backLabel }: { lang:
           <div className="overflow-hidden rounded-2xl border" style={{ borderColor: "var(--cw-line)", background: "var(--cw-panel)" }}>
             <div className="flex items-center justify-between border-b px-4 py-2.5" style={{ borderColor: "var(--cw-line)" }}>
               <span className="text-xs font-semibold" style={{ color: "var(--cw-fg)", ...MONO }}>site-graph · {doneCount}/{N}</span>
-              <span className="text-[10px]" style={{ color: "var(--cw-muted)" }}>
+              <span role="status" aria-live="polite" aria-atomic="true" className="text-[10px]" style={{ color: "var(--cw-muted)" }}>
                 {finished
                   ? L({ zh: "✓ 抓取完成", en: "✓ crawl finished" }, lang)
                   : running
@@ -292,7 +346,7 @@ export default function CrawlerVisualizer({ lang, backHref, backLabel }: { lang:
                     {L({ zh: "暂停", en: "Pause" }, lang)}
                   </button>
                 )}
-                {running && (
+                {!finished && (
                   <button type="button" onClick={reset} className="rounded-lg border px-4 py-2.5 text-sm font-semibold transition hover:bg-white/5" style={{ borderColor: "var(--cw-line)", color: "var(--cw-fg)" }}>
                     {L({ zh: "重置", en: "Reset" }, lang)}
                   </button>
@@ -324,6 +378,7 @@ export default function CrawlerVisualizer({ lang, backHref, backLabel }: { lang:
                     type="button"
                     role="switch"
                     aria-checked={robots}
+                    aria-label={L({ zh: "robots.txt 协议遵守", en: "robots.txt compliance" }, lang)}
                     onClick={() => { setRobots((v) => !v); log(robotsRef.current ? L({ zh: "⚠ 已关闭 robots 遵守——受限页面将被抓取。", en: "⚠ robots compliance off — restricted pages will be fetched." }, lang) : L({ zh: "已开启 robots 遵守。", en: "robots compliance on." }, lang), robotsRef.current); }}
                     className="relative h-6 w-11 rounded-full transition-colors"
                     style={{ background: robots ? "var(--cw-acc)" : "#3A4A42" }}

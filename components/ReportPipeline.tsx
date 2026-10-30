@@ -101,10 +101,13 @@ export default function ReportPipeline({ lang, backHref, backLabel }: { lang: La
   };
 
   const download = () => {
-    const header = "region,orders,amount_cny";
-    const rows = SUMMARY.map((r) => `${r.region.en},${r.orders},${r.amount}`);
-    const total = `TOTAL,${TOTAL.orders},${TOTAL.amount}`;
-    const csv = "\uFEFF" + [header, ...rows, total].join("\n");
+    const csvField = (value: string | number) => `"${String(value).replace(/"/g, '""')}"`;
+    const rows: (string | number)[][] = [
+      ["region", "orders", "amount_cny"],
+      ...SUMMARY.map((r) => [r.region.en, r.orders, r.amount]),
+      ["TOTAL", TOTAL.orders, TOTAL.amount],
+    ];
+    const csv = "\uFEFF" + rows.map((row) => row.map(csvField).join(",")).join("\r\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
@@ -141,8 +144,8 @@ export default function ReportPipeline({ lang, backHref, backLabel }: { lang: La
           <p className="mt-3 max-w-2xl text-sm leading-relaxed" style={{ color: "var(--rp-muted)" }}>
             {L(
               {
-                zh: "三张区域明细表 → 校验、清洗、去重、合并、汇总，全程可视化。跑完后可以下载真实可用的 CSV 报表。",
-                en: "Three regional sheets → validate, clean, dedupe, merge, summarize — fully visualized. Download a real, usable CSV when it finishes.",
+                zh: "使用内置的三张区域示例数据（不读取或导入本地文件），依次演示校验、清洗、去重、合并、汇总。跑完后可以下载真实可用的 CSV 报表。",
+                en: "Three built-in regional sample datasets (no local files are read or imported) → validate, clean, dedupe, merge, summarize. Download a real, usable CSV when it finishes.",
               },
               lang
             )}
@@ -150,12 +153,12 @@ export default function ReportPipeline({ lang, backHref, backLabel }: { lang: La
         </div>
 
         <div className="rp-b grid gap-5 p-6 sm:p-8 lg:grid-cols-[1fr_1.5fr]">
-          {/* 左：源文件 */}
+          {/* 左：内置示例数据 */}
           <div className="flex flex-col gap-4">
             <div className="rounded-2xl border p-4" style={{ borderColor: "var(--rp-line)", background: "var(--rp-panel)" }}>
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold tracking-widest" style={{ color: "var(--rp-acc)" }}>
-                  {L({ zh: "源文件", en: "SOURCE FILES" }, lang)}
+                  {L({ zh: "内置示例数据", en: "BUILT-IN SAMPLES" }, lang)}
                 </span>
                 <span className="text-[10px]" style={{ color: "var(--rp-muted)", ...MONO }}>3 × CSV</span>
               </div>
@@ -184,7 +187,7 @@ export default function ReportPipeline({ lang, backHref, backLabel }: { lang: La
                   className="flex-1 rounded-lg px-4 py-2.5 text-sm font-bold text-white transition hover:brightness-110 active:scale-95"
                   style={{ background: "linear-gradient(135deg,var(--rp-acc),#7C3AED)" }}
                 >
-                  {L({ zh: imported ? "重新运行流水线" : "导入并运行", en: imported ? "Run pipeline again" : "Import & run" }, lang)}
+                  {L({ zh: imported ? "重新运行流水线" : "运行示例流水线", en: imported ? "Run pipeline again" : "Run sample pipeline" }, lang)}
                 </button>
                 {imported && (
                   <button type="button" onClick={reset} className="rounded-lg border px-4 py-2.5 text-sm font-semibold transition hover:bg-white/5" style={{ borderColor: "var(--rp-line)", color: "var(--rp-fg)" }}>
@@ -207,7 +210,7 @@ export default function ReportPipeline({ lang, backHref, backLabel }: { lang: La
                     className="rounded-lg px-3.5 py-2 text-[11px] font-bold text-white transition hover:brightness-110 active:scale-95"
                     style={{ background: "linear-gradient(135deg,var(--rp-ok),#059669)" }}
                   >
-                    ↓ {L({ zh: "下载 report.csv", en: "Download report.csv" }, lang)}
+                    ↓ {L({ zh: "下载 quarterly-report.csv", en: "Download quarterly-report.csv" }, lang)}
                   </button>
                 </div>
                 <table className="mt-3 w-full text-xs" style={{ ...MONO }}>
@@ -244,8 +247,15 @@ export default function ReportPipeline({ lang, backHref, backLabel }: { lang: La
                 {L({ zh: "处理流水线", en: "PIPELINE" }, lang)}
               </span>
               <span className="text-[10px]" style={{ color: "var(--rp-muted)", ...MONO }}>
-                {done ? L({ zh: "305 行 · 处理完成", en: "305 rows · done" }, lang) : imported ? L({ zh: "334 行输入", en: "334 rows in" }, lang) : L({ zh: "等待导入", en: "waiting for import" }, lang)}
+                {done ? L({ zh: "305 行 · 处理完成", en: "305 rows · done" }, lang) : imported ? L({ zh: "334 行示例数据", en: "334 sample rows" }, lang) : L({ zh: "等待运行", en: "waiting to run" }, lang)}
               </span>
+            </div>
+            <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+              {stageIdx >= 0
+                ? `${L(STAGES[stageIdx].name, lang)} ${progress}%`
+                : done
+                  ? L({ zh: "报表已生成", en: "Report ready" }, lang)
+                  : L({ zh: "等待运行示例流水线", en: "Waiting to run the sample pipeline" }, lang)}
             </div>
             <div className="mt-4 space-y-3">
               {STAGES.map((st, i) => {
@@ -308,7 +318,7 @@ export default function ReportPipeline({ lang, backHref, backLabel }: { lang: La
             </div>
             {!imported && (
               <p className="mt-4 rounded-lg border px-3.5 py-2.5 text-[11px]" style={{ borderColor: "var(--rp-line)", color: "var(--rp-muted)" }}>
-                {L({ zh: "点击左侧「导入并运行」，流水线会按阶段推进。", en: "Hit \"Import & run\" on the left and the pipeline advances stage by stage." }, lang)}
+                {L({ zh: "点击左侧「运行示例流水线」，流水线会按阶段推进。", en: "Hit \"Run sample pipeline\" on the left and the pipeline advances stage by stage." }, lang)}
               </p>
             )}
           </div>
